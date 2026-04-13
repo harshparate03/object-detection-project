@@ -1,0 +1,27 @@
+{% load static %}
+<footer class="rainbow-footer footer-style-default footer-style-3 position-relative mt-0">
+    <div class="chatenai-separator">
+        <img alt="separator" loading="lazy" width="1200" height="61" decoding="async" data-nimg="1" 
+            class="w-100 separator-dark" style="color:transparent"
+            src="{% static 'media/separator-top.787275f4.svg' %}" />
+    </div>
+    <div class="footer-top">
+        <div class="container">
+            <div class="row justify-content-center mb--30">
+                <div class="col-lg-4 col-md-6 col-sm-12 col-12">
+                    <div class="rainbow-footer-widget text-center">
+                        <div class="logo">
+                            <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+                                <img alt="Corporate Logo" loading="lazy" width="80" height="35" decoding="async" 
+                                    data-nimg="1" class="logo-light" style="color:transparent"
+                                    src="{% static 'images/avater5827.png' %}" />
+                                <span class="logo-text">Vision</span>
+                            </a>
+                        </div>
+                        <p class="b1 text-center mt--20 mb--0">Empowering Insights Through Vision</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

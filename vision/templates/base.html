@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"Vision" }}</title>
+    <meta name="description" content="Page Description" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="{% static 'images/avater5827.png' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- <link href="/static/css/admin_base1.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin_base2.css"> -->
+    <script src="/static/js/sweetalert.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+
+    <style>
+        .theme-gradient {
+            background: linear-gradient(90deg, #12b5de -30%, #7130c3 30%, #ff3bd4 90%);
+            text-transform: capitalize;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg bg-white w-100">
+        <div class="container">
+            <span class="navbar-brand text-black d-flex align-items-center">
+                <img src="{% static 'images/logo_white.png' %}" alt="Logo" width="60" height="60" class="me-1"
+                    style="margin-top: 2px;">
+                <span class="theme-gradient" style="font-family: monospace;">Vision</span>
+            </span>
+
+            <div class="collapse navbar-collapse" id="navbarNav" style="margin-left: 20px;">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'admin_dashboard' %}">Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'admin_history' %}">History</a> <!-- New link -->
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'help_message' %}">Help Message</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'users_feedback' %}">Feedback</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% endif %}
+
+    <div class="container mt-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+    <footer class="rainbow-footer footer-style-default footer-style-3 position-relative mt-0 bg-white">
+        <div class="footer-top">
+            <div class="container">
+                <div class="row justify-content-center mb--30">
+                    <div class="col-lg-4 col-md-6 col-sm-12 col-12">
+                        <div class="rainbow-footer-widget text-center">
+                            <div class="d-flex justify-content-center align-items-center text-center">
+                                <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}"
+                                    class="d-flex align-items-center text-decoration-none">
+                                    <img src="{% static 'images/logo_white.png' %}" alt="Logo" width="60" height="60"
+                                        class="me-1"> <!-- Adjust logo size -->
+                                    <span class="navbar-brand theme-gradient"
+                                        style="font-family: monospace; font-size: 20px;">
+                                        Vision
+                                    </span>
+                                </a>
+                            </div>
+
+
+                            <p class="b1 text-center mt--20 mb--0 text-black">Empowering Insights Through Vision</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

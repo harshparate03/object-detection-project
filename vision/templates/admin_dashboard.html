@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2>{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Active Users</h5>
+                    <h2>{{ active_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Inactive Users</h5>
+                    <h2>{{ inactive_users }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <!-- <div class="row mb-3">
+        <div class="input-group" style="width: 250px;">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search Username">
+            <span class="input-group-text">
+                <i class="fas fa-search"></i>
+            </span>
+        </div>
+    </div> -->
+
+    <!-- User List Section -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="mb-0 theme-gradient">User Management</h5>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <!-- Date Range Filter and Report Generation -->
+                <form action="/generate_report/" method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <!-- <input type="hidden" name="csrfmiddlewaretoken" value="7VgrcEcCARBaJVI6NFytm84v58emczXaecFNMdJhEfJ9AjcNJLWpD8iWU2ORI4LA"> -->
+                    <input type="date" name="start_date" id="startDate" class="form-control w-auto">
+                    <input type="date" name="end_date" id="endDate" class="form-control w-auto">
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                </form>
+                <!-- Filter Button -->
+                <button class="btn btn-primary" id="filterBtn">Filter</button>
+                <!-- Search Box -->
+                <div class="input-group w-auto">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search Username">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="userTable">
+                    <thead>
+                        <tr>
+                            <th>Sr.No.</th>
+                            <th>Profile</th>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Join Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <img src="{{ user.profile_image.url }}" alt="Profile Image" class="rounded-circle"
+                                    width="40" height="40">
+                            </td>
+                            <td class="username">{{ user.username }}</td>
+                            <td>{{ user.name|default:user.username }}</td>
+                            <td class="email">{{ user.email }}</td>
+                            <td>{{ user.phone|default:"-" }}</td>
+                            <td class="join-date">{{ user.date_joined|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_user' user.id %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal{{ user.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Delete</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete user "{{ user.username }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No users found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Live Search -->
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#userTable tbody tr");
+
+            rows.forEach(row => {
+                let username = row.querySelector(".username").textContent.toLowerCase();
+                row.style.display = username.includes(filter) ? "" : "none";
+            });
+        });
+    </script>
+    <!-- live search duration of users  -->
+    <!-- <script>
+        document.getElementById("filterBtn").addEventListener("click", function () {
+            let startDate = document.getElementById("startDate").value;
+            let endDate = document.getElementById("endDate").value;
+            let rows = document.querySelectorAll("#userTable tbody tr");
+
+            rows.forEach(row => {
+                let joinDate = row.querySelector(".join-date").textContent.trim();
+                let joinDateObj = new Date(joinDate);
+                let startDateObj = new Date(startDate);
+                let endDateObj = new Date(endDate);
+
+                if (startDate && endDate) {
+                    row.style.display = (joinDateObj >= startDateObj && joinDateObj <= endDateObj) ? "" : "none";
+                } else {
+                    row.style.display = ""; // Reset if no dates selected
+                }
+            });
+        });
+    </script> -->
+
+
+    <!-- <script>
+        document.getElementById("filterBtn").addEventListener("click", function () {
+            let startDate = document.getElementById("startDate").value;
+            let endDate = document.getElementById("endDate").value;
+            let rows = document.querySelectorAll("#userTable tbody tr");
+            let hasResults = false;
+
+            if (!startDate || !endDate) {
+                alert("Please select both Start Date and End Date.");
+                return;
+            }
+
+            let startDateObj = new Date(startDate);
+            let endDateObj = new Date(endDate);
+
+            rows.forEach(row => {
+                let joinDateElem = row.querySelector(".join-date");
+                if (!joinDateElem) return;
+
+                let joinDateStr = joinDateElem.textContent.trim();
+
+                // 🔹 Check the format (Assuming the format is YYYY-MM-DD)
+                let joinDateObj = new Date(joinDateStr);
+
+                console.log(`Checking: ${joinDateObj.toISOString().split('T')[0]} against ${startDate} - ${endDate}`);
+
+                if (!isNaN(joinDateObj.getTime())) {  // ✅ Ensure valid date
+                    let isVisible = joinDateObj >= startDateObj && joinDateObj <= endDateObj;
+                    row.style.display = isVisible ? "" : "none";
+                    if (isVisible) hasResults = true;
+                } else {
+                    console.warn(`Invalid date format detected: ${joinDateStr}`);
+                }
+            });
+
+            document.getElementById("downloadReportBtn").style.display = hasResults ? "inline-block" : "none";
+
+            if (!hasResults) {
+                alert("No users found in the selected date range.");
+            }
+        });
+
+        // ✅ **Download Report**
+        document.getElementById("downloadReportBtn").addEventListener("click", function () {
+            let startDate = document.getElementById("startDate").value;
+            let endDate = document.getElementById("endDate").value;
+            console.log(startDate,endDate)
+            if (!startDate || !endDate) {
+                alert("Please select a valid date range before downloading the report.");
+                return;
+            }
+
+            let users = [];
+            document.querySelectorAll("#userTable tbody tr").forEach(row => {
+                let usernameEl = row.querySelector(".username");
+                let emailEl = row.querySelector(".email");
+                let joinDateEl = row.querySelector(".join-date");
+                console.log(usernameEl,emailEl,joinDateEl);
+                if (row.style.display !== "none" && usernameEl && emailEl && joinDateEl) {
+                    users.push({
+                        username: usernameEl.textContent.trim(),
+                        email: emailEl.textContent.trim(),
+                        date_joined: joinDateEl.textContent.trim()
+                    });
+                }
+            });
+
+            if (users.length === 0) {
+                alert("No users found in the selected date range.");
+                return;
+            }
+
+            fetch("/admin/generate_report/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate, users: users })
+            })
+                .then(response => {
+                    if (response.ok) return response.blob();
+                    throw new Error("Failed to generate report");
+                })
+                .then(blob => {
+                    let url = window.URL.createObjectURL(blob);
+                    let a = document.createElement("a");
+                    a.href = url;
+                    a.download = `User_Report_${startDate}_to_${endDate}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error generating PDF. Please try again.");
+                });
+        });
+
+        // 🔑 **Get CSRF Token**
+        function getCSRFToken() {
+            let csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfTokenInput) return csrfTokenInput.value;
+            let csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+            return csrfMetaTag ? csrfMetaTag.getAttribute("content") : "";
+        }
+    </script> -->
+
+    <script>
+        document.getElementById("filterBtn").addEventListener("click", function () {
+            let startDate = document.getElementById("startDate").value;
+            let endDate = document.getElementById("endDate").value;
+            let rows = document.querySelectorAll("#userTable tbody tr");
+            let hasResults = false;
+
+            if (!startDate || !endDate) {
+                alert("Please select both Start Date and End Date.");
+                return;
+            }
+
+            let startDateObj = new Date(startDate);
+            let endDateObj = new Date(endDate);
+
+            rows.forEach(row => {
+                let joinDateElem = row.querySelector(".join-date");
+                if (!joinDateElem) return;
+
+                let joinDateStr = joinDateElem.textContent.trim();
+
+                // 🔹 Check the format (Assuming the format is YYYY-MM-DD)
+                let joinDateObj = new Date(joinDateStr);
+
+                console.log(`Checking: ${joinDateObj.toISOString().split('T')[0]} against ${startDate} - ${endDate}`);
+
+                if (!isNaN(joinDateObj.getTime())) {  // ✅ Ensure valid date
+                    let isVisible = joinDateObj >= startDateObj && joinDateObj <= endDateObj;
+                    row.style.display = isVisible ? "" : "none";
+                    if (isVisible) hasResults = true;
+                } else {
+                    console.warn(`Invalid date format detected: ${joinDateStr}`);
+                }
+            });
+
+            document.getElementById("downloadReportBtn").style.display = hasResults ? "inline-block" : "none";
+
+            if (!hasResults) {
+                alert("No users found in the selected date range.");
+            }
+        });
+
+        // ✅ **Download Report**
+        document.getElementById("downloadReportBtn").addEventListener("click", function () {
+            let startDate = document.getElementById("startDate").value;
+            let endDate = document.getElementById("endDate").value;
+
+            if (!startDate || !endDate) {
+                alert("Please select a valid date range before downloading the report.");
+                return;
+            }
+
+            let users = [];
+            document.querySelectorAll("#userTable tbody tr").forEach(row => {
+                let usernameEl = row.querySelector(".username");
+                let emailEl = row.querySelector(".email");
+                let joinDateEl = row.querySelector(".join-date");
+
+                if (row.style.display !== "none" && usernameEl && emailEl && joinDateEl) {
+                    users.push({
+                        username: usernameEl.textContent.trim(),
+                        email: emailEl.textContent.trim(),
+                        date_joined: joinDateEl.textContent.trim()
+                    });
+                }
+            });
+
+            if (users.length === 0) {
+                alert("No users found in the selected date range.");
+                return;
+            }
+
+            fetch("{% url 'generate_report' %}", {  // ✅ Use Django URL template
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate, users: users })
+            })
+                .then(response => response.json())  // ✅ Expect JSON response
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    alert("Report generated successfully!");
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error generating report. Please try again.");
+                });
+        });
+
+        // 🔑 **Get CSRF Token**
+        function getCSRFToken() {
+            let csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfTokenInput) return csrfTokenInput.value;
+            let csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+            return csrfMetaTag ? csrfMetaTag.getAttribute("content") : "";
+        }
+    </script>
+
+
+
+</div>
+
+{% endblock %}

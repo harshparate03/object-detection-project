@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Edit User</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Display current profile image -->
+    <div class="mb-3">
+        <label for="profile_image">Profile Image</label>
+        <div>
+            <img id="current_image"
+                src="{% if form.instance.profile_image %}{{ form.instance.profile_image.url }}{% else %}/media/profile_pics/default.jpg{% endif %}"
+                alt="Profile Image"
+                onclick="document.getElementById('profile_image').click();"
+                style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+        </div>
+        
+        <!-- Hidden file input to update the image -->
+        <input id="profile_image" name="profile_image" type="file" accept="image/*"
+            style="display:none;" onchange="previewImage(event)">
+    </div>
+
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+
+<script>
+function previewImage(event) {
+    var reader = new FileReader();
+    reader.onload = function(){
+        var output = document.getElementById('current_image');
+        output.src = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,54 @@
+# --- 🐍 Virtual Environments ---
+venv/
+ENV/
+env/
+
+# --- 🐍 Python Artifacts ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# --- 🧪 Django Specific ---
+*.sqlite3
+db.sqlite3
+
+# --- 🔐 Environment Secrets ---
+*.env
+.env.*
+
+# --- 🧠 ML / Large Model Files ---
+*.pt
+*.h5
+*.pkl
+*.joblib
+
+# --- 🎞️ Media / Output Files ---
+*.mp4
+*.avi
+*.mkv
+*.mov
+media/
+output/
+uploads/
+
+# --- 🗃️ Archives ---
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# --- 🛠️ Node.js / NPM ---
+node_modules/
+
+# --- 💻 IDE / Editor Settings ---
+.vscode/
+.idea/
+*.swp
+
+# --- 🍏 macOS / OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- 🔊 Logs ---
+*.log

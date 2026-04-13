@@ -1,0 +1,128 @@
+{% load static %}
+
+<header class="rainbow-header header-default header-not-transparent header-sticky">
+    <div class="container position-relative">
+        <div class="row align-items-center row--0">
+            <div class="col-lg-3 col-md-6 col-6">
+                <div class="logo">
+                    <a href="{% url 'dashboard' %}">
+                        <img alt="ChatBot Logo" loading="lazy" width="80px" height="80px" decoding="async"
+                            data-nimg="1" class="logo-light" style="color:transparent"
+                            src="{% static 'images/avater5827.png' %}" />
+                        <span class="logo-text new-box">Vision</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-6 col-6 position-static">
+                <div class="header-right">
+                    <nav class="mainmenu-nav d-none d-lg-block">
+                        <ul class="mainmenu">
+                            {% if user.is_authenticated %}
+                                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'contact' %}">Contact</a></li>
+                            <li><a href="{% url 'services' %}">Services</a></li>
+                            <li><a href="{% url 'about' %}">About</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Profile Image OR Login/Signup Handling -->
+                    <div class="account-access rbt-user-wrapper right-align-dropdown">
+                        {% if user.is_authenticated %}
+                            <!-- If user is logged in, show profile image -->
+                            <div class="rbt-user ml--0">
+                                <a class="admin-img" href="#">
+                                    <img alt="User" width="920" height="920" style="color:transparent"
+                                        src="{{ user.profile_image.url }}" />
+                                </a>
+                            </div>
+
+                            <div class="rbt-user-menu-list-wrapper">
+                                <div class="inner">
+                                    <div class="rbt-admin-profile">
+                                        <div class="admin-thumbnail">
+                                            <img alt="User Images" width="920" height="920" data-nimg="1"
+                                                style="color:transparent" src="{{ user.profile_image.url }}" />
+                                        </div>
+                                        <div class="admin-info profile-image-info">
+                                            <span class="name">
+                                                <span class="theme-gradient">{{ user.username }}</span>
+                                            </span>
+                                            <a class="rbt-btn-link color-primary" href="{% url 'view_profile' %}">
+                                                View Profile
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <hr class="mt--10 mb--10" />
+                                    <ul class="user-list-wrapper user-nav">
+                                        <li><a href="/help_center"><i class="feather-help-circle"></i><span>Help Center</span></a></li>
+                                        <li><a href="{% url 'history' %}"><i class="feather-clock"></i><span>History</span></a></li>
+                                        <li><a href="{% url 'view_profile' %}"><i class="feather-settings"></i><span>Settings</span></a></li>
+                                    </ul>
+                                    <ul class="user-list-wrapper">
+                                        <li><a href="{% url 'logout' %}"><i class="feather-log-out"></i><span>Logout</span></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- If user is NOT logged in, show Login & Sign Up buttons -->
+                            <div class="header-btn">
+                                <a class="btn-default btn-small round" href="{% url 'signin' %}" style="margin-right: 10px;">Login</a>
+                                <a class="btn-default btn-small round" href="{% url 'signup' %}">Sign Up</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <div class="mobile-menu-bar ml--5 d-block d-lg-none">
+                        <div class="d-flex">
+                            <div class="hamberger">
+                                <button class="hamberger-button" id="mobileMenuToggle">
+                                    <i class="feather-menu"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="popup-mobile-menu">
+    <div class="bg"></div>
+    <div class="inner-popup">
+        <div class="header-top">
+            <div class="d-flex">
+                <div class="col-lg-3 col-md-6 col-6">
+                    <span class="logo-text new-box">Vision</span>
+                </div>
+            </div>
+            <div class="close-menu">
+                <button class="close-button"><i class="feather-x"></i></button>
+            </div>
+        </div>
+        <div class="content">
+            <ul class="mainmenu">
+                <li><a href="{% url 'contact' %}">Contact</a></li>
+                <li><a href="{% url 'services' %}">Services</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('mobileMenuToggle').addEventListener('click', function () {
+        document.querySelector('.popup-mobile-menu').classList.toggle('active');
+    });
+
+    document.querySelector('.popup-mobile-menu .bg').addEventListener('click', function () {
+        document.querySelector('.popup-mobile-menu').classList.remove('active');
+    });
+
+    document.querySelector('.close-button').addEventListener('click', function () {
+        document.querySelector('.popup-mobile-menu').classList.remove('active');
+    });
+</script>

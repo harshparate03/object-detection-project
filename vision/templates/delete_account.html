@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+{% load static %}
+{% include 'includes/head.html' with page_title="Delete|Account" %}
+<body>
+    {% include 'includes/header.html' %}
+    <div class="single-settings-box profile-details-box top-flashlight light-xl leftside overflow-hidden">
+        <div class="profile-details-tab">
+            <div class="advance-tab-button mb--30">
+                <ul class="nav nav-tabs tab-button-style-2 justify-content-start" id="settinsTab-4" role="tablist">
+                    <li role="presentation"><a href="/view_profile" class="tab-button" id="profile-tab" data-bs-toggle="tab"
+                            data-bs-target="#profile" role="tab" aria-controls="profile" aria-selected="false"
+                            tabindex="-1"><span class="title">Profile</span></a></li>
+                    <li role="presentation"><a href="/change_password" class="tab-button" id="password-tab" data-bs-toggle="tab"
+                            data-bs-target="#password" role="tab" aria-controls="password" aria-selected="false"
+                            tabindex="-1"><span class="title">Password</span></a></li>
+                    <li role="presentation"><a href="#" class="tab-button active" id="del-account-tab"
+                            data-bs-toggle="tab" data-bs-target="#delaccount" role="tab" aria-controls="delaccount"
+                            aria-selected="true"><span class="title">Delete Account</span></a></li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <form method="POST" action="{% url 'delete_account' %}"
+                        class="rbt-profile-row rbt-default-form row row--15">
+                        {% csrf_token %} <!-- CSRF protection -->
+
+                        <div class="col-11 text-center">
+                            <p class="mb--20"><strong>Warning: </strong>Deleting your account will permanently erase all
+                                your data and cannot be reversed. This includes your profile, feedback, and
+                                any other info linked to your account. Are you sure you want to delete your account?
+                                Enter your password to confirm.</p>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="enterpassword">Your Password</label>
+                                <input id="enterpassword" name="password" type="password" placeholder="Current Password"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt--20">
+                            <div class="form-group mb--0">
+                                <button type="submit" class="btn-default">
+                                    <i class="feather-trash-2"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                    {% if messages %}
+                    {% for message in messages %}
+                    <p style="color: red;">{{ message }}</p>
+                    {% endfor %}
+                    {% endif %}
+                
+
+
+                    <form method="POST" action="{% url 'delete_account' %}"
+                        class="rbt-profile-row rbt-default-form row row--15">
+                        {% csrf_token %} <!-- CSRF protection -->
+
+                        <div class="col-11 text-center">
+                            <p class="mb--20"><strong>Warning: </strong>Deleting your account will permanently erase all
+                                your data and cannot be reversed. This includes your profile, feedback, and
+                                any other info linked to your account. Are you sure you want to delete your account?
+                                Enter your password to confirm.</p>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="enterpassword">Your Password</label>
+                                <input id="enterpassword" name="password" type="password"
+                                    placeholder="Enter your password" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt--20">
+                            <div class="form-group mb--0">
+                                <button type="submit" class="btn-default">
+                                    <i class="feather-trash-2"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="tab-pane fade active show" id="delaccount" role="tabpanel"
+                    aria-labelledby="del-account-tab">
+                    <form method="POST" action="{% url 'delete_account' %}" class="rbt-profile-row rbt-default-form row row--15">
+                        {% csrf_token %}
+                        
+                        <div class="col-11 text-center">
+                            <p class="mb--20"><strong>Warning:</strong> Deleting your account will permanently erase all
+                                your data and cannot be undone. Please enter your password to confirm.</p>
+                        </div>
+                    
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="enterpassword">Your Password</label>
+                                <input id="enterpassword" name="password" type="password" placeholder="Current Password" required>
+                            </div>
+                        </div>
+                    
+                        <div class="col-12 mt--20">
+                            <div class="form-group mb--0">
+                                <button type="submit" class="btn-default">
+                                    <i class="feather-trash-2"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'includes/footer.html' %}
+</body>
+
+</html>

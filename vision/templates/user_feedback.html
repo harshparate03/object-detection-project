@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card-header d-flex justify-content-between align-items-center mt-4">
+    <h5 class="mb-0 theme-gradient">Feedback</h5>
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <!-- Date Range Filter and Report Generation -->
+            <form action="/generate_feedback_report/" method="post" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="date" name="start_date" id="feedbackStartDate" class="form-control w-auto">
+                <input type="date" name="end_date" id="feedbackEndDate" class="form-control w-auto">
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+            </form>
+            <!-- Filter Button -->
+            <button class="btn btn-primary" id="feedbackFilterBtn">Filter</button>
+            <!-- Search Box -->
+            <div class="input-group w-auto">
+                <input type="text" id="feedbackSearchInput" class="form-control" placeholder="Search Username">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-striped" id="feedbackTable">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Feedback</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in feedbacks %}
+                <tr>
+                    <td class="username">{{ feedback.user.username }}</td>
+                    <td>{{ feedback.feedback }}</td>
+                    <td class="feedback-date">{{ feedback.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No feedback available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JavaScript for Date Filtering -->
+<script>
+    // 🔎 **Search Feedback by Username**
+    document.getElementById("feedbackSearchInput").addEventListener("keyup", function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#feedbackTable tbody tr");
+
+        rows.forEach(row => {
+            let username = row.querySelector(".username").textContent.toLowerCase();
+            row.style.display = username.includes(filter) ? "" : "none";
+        });
+    });
+
+    // 📅 **Filter Feedback by Date Range**
+    document.getElementById("feedbackFilterBtn").addEventListener("click", function () {
+        let startDate = document.getElementById("feedbackStartDate").value;
+        let endDate = document.getElementById("feedbackEndDate").value;
+        let rows = document.querySelectorAll("#feedbackTable tbody tr");
+        let hasResults = false;
+
+        if (!startDate || !endDate) {
+            alert("Please select both Start Date and End Date.");
+            return;
+        }
+
+        let startDateObj = new Date(startDate);
+        let endDateObj = new Date(endDate);
+
+        rows.forEach(row => {
+            let dateElem = row.querySelector(".feedback-date");
+            if (!dateElem) return;
+
+            let feedbackDateStr = dateElem.textContent.trim();
+            let feedbackDateObj = new Date(feedbackDateStr);
+
+            if (!isNaN(feedbackDateObj.getTime())) {
+                let isVisible = feedbackDateObj >= startDateObj && feedbackDateObj <= endDateObj;
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) hasResults = true;
+            } else {
+                console.warn(`Invalid date format detected: ${feedbackDateStr}`);
+            }
+        });
+
+        if (!hasResults) {
+            alert("No feedback found in the selected date range.");
+        }
+    });
+
+    // 📥 **Generate Feedback Report**
+    document.querySelector("form[action='/generate_feedback_report/']").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let startDate = document.getElementById("feedbackStartDate").value;
+        let endDate = document.getElementById("feedbackEndDate").value;
+
+        if (!startDate || !endDate) {
+            alert("Please select a valid date range before generating the report.");
+            return;
+        }
+
+        let feedbacks = [];
+        document.querySelectorAll("#feedbackTable tbody tr").forEach(row => {
+            let usernameEl = row.querySelector(".username");
+            let feedbackEl = row.querySelector("td:nth-child(2)");
+            let dateEl = row.querySelector(".feedback-date");
+
+            if (row.style.display !== "none" && usernameEl && feedbackEl && dateEl) {
+                feedbacks.push({
+                    username: usernameEl.textContent.trim(),
+                    feedback: feedbackEl.textContent.trim(),
+                    date: dateEl.textContent.trim()
+                });
+            }
+        });
+
+        if (feedbacks.length === 0) {
+            alert("No feedback found in the selected date range.");
+            return;
+        }
+
+        fetch("{% url 'generate_feedback_report' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({ start_date: startDate, end_date: endDate, feedbacks: feedbacks })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.blob(); // Handle PDF download
+            })
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "feedback_report.pdf";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error generating report. Please try again.");
+            });
+    });
+
+    // 🔑 **Get CSRF Token**
+    function getCSRFToken() {
+        let csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfTokenInput) return csrfTokenInput.value;
+        let csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+        return csrfMetaTag ? csrfMetaTag.getAttribute("content") : "";
+    }
+</script>
+{% endblock %}

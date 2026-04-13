@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card-header d-flex justify-content-between align-items-center mt-4">
+    <h5 class="mb-0 theme-gradient">Help Messages</h5>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <!-- Date Range Filter for Help Messages -->
+        <form id="generateHelpReportForm" action="{% url 'generate_help_message_report' %}" method="post"
+            class="d-flex gap-2">
+            {% csrf_token %}
+            <input type="date" name="start_date" id="helpStartDate" class="form-control w-auto">
+            <input type="date" name="end_date" id="helpEndDate" class="form-control w-auto">
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </form>
+        <button class="btn btn-primary" id="helpFilterBtn">Filter</button>
+        <div class="input-group w-auto">
+            <input type="text" id="helpSearchInput" class="form-control" placeholder="Search Username">
+            <span class="input-group-text">
+                <i class="fas fa-search"></i>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-striped" id="helpTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for message in help_messages %}
+                <tr>
+                    <td class="username">{{ message.name }}</td>
+                    <td>{{ message.email }}</td>
+                    <td>{{ message.phone_number }}</td>
+                    <td>{{ message.subject }}</td>
+                    <td>{{ message.message }}</td>
+                    <td class="help-date">{{ message.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No help messages available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JavaScript for Filtering -->
+<script>
+    // 🔎 **Search Help Messages by Name**
+    document.getElementById("helpSearchInput").addEventListener("keyup", function () {
+        let filter = this.value.trim().toLowerCase(); // Trim spaces and convert to lowercase
+        let rows = document.querySelectorAll("#helpTable tbody tr");
+
+        rows.forEach(row => {
+            let usernameElem = row.querySelector(".username");
+            if (!usernameElem) return;
+
+            let username = usernameElem.textContent.trim().toLowerCase();
+            row.style.display = (username.includes(filter) || filter === "") ? "" : "none";
+        });
+    });
+
+
+    // 📅 **Filter Help Messages by Date Range**
+    document.getElementById("helpFilterBtn").addEventListener("click", function () {
+        let startDate = document.getElementById("helpStartDate").value;
+        let endDate = document.getElementById("helpEndDate").value;
+        let rows = document.querySelectorAll("#helpTable tbody tr");
+        let hasResults = false;
+
+        if (!startDate || !endDate) {
+            alert("Please select both Start Date and End Date.");
+            return;
+        }
+
+        let startDateObj = new Date(startDate);
+        let endDateObj = new Date(endDate);
+
+        rows.forEach(row => {
+            let dateElem = row.querySelector(".help-date");
+            if (!dateElem) return;
+
+            let helpDateStr = dateElem.textContent.trim();
+            let helpDateObj = new Date(helpDateStr);
+
+            if (!isNaN(helpDateObj.getTime())) {
+                let isVisible = helpDateObj >= startDateObj && helpDateObj <= endDateObj;
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) hasResults = true;
+            } else {
+                console.warn(`Invalid date format detected: ${helpDateStr}`);
+            }
+        });
+
+        if (!hasResults) {
+            alert("No help messages found in the selected date range.");
+        }
+    });
+
+    document.getElementById("generateHelpReportForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let startDate = document.getElementById("helpStartDate").value;
+        let endDate = document.getElementById("helpEndDate").value;
+
+        if (!startDate || !endDate) {
+            alert("Please select a valid date range before generating the report.");
+            return;
+        }
+
+        let messages = [];
+        document.querySelectorAll("#helpTable tbody tr").forEach(row => {
+            if (row.style.display !== "none") {
+                let name = row.querySelector(".username")?.textContent.trim();
+                let email = row.querySelector("td:nth-child(2)")?.textContent.trim();
+                let phone = row.querySelector("td:nth-child(3)")?.textContent.trim();
+                let subject = row.querySelector("td:nth-child(4)")?.textContent.trim();
+                let message = row.querySelector("td:nth-child(5)")?.textContent.trim();
+                let date = row.querySelector(".help-date")?.textContent.trim();
+
+                if (name && email && phone && subject && message && date) {
+                    messages.push({ name, email, phone, subject, message, date });
+                }
+            }
+        });
+
+        if (messages.length === 0) {
+            alert("No help messages found in the selected date range.");
+            return;
+        }
+
+        fetch("{% url 'generate_help_message_report' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({ start_date: startDate, end_date: endDate, messages: messages })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.blob();
+            })
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "help_messages_report.pdf";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error generating report. Please try again.");
+            });
+    });
+
+    // CSRF Token Retrieval Function
+    function getCSRFToken() {
+        let csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfTokenInput ? csrfTokenInput.value : "";
+    }
+
+
+
+</script>
+{% endblock %}
