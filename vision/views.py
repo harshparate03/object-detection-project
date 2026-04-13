@@ -489,7 +489,7 @@ def upload_image(request):
             logger.info(f"Image saved at: {file_path}")
 
             # Process the image using YOLO
-            detector = YOLODetector()  # Initialize your YOLO detector
+            detector = get_detector()
             image = cv2.imread(file_path)
 
             if image is None:
@@ -622,8 +622,6 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from ultralytics import YOLO
 
-# Load YOLO model
-model = YOLO('yolov8n.pt')
 import os
 from django.conf import settings
 from django.http import JsonResponse
@@ -633,7 +631,22 @@ from django.urls import reverse
 from .video_detect import YOLODetector
 from django.utils.http import urlsafe_base64_encode
 
-detector = YOLODetector()
+# Lazy load model and detector
+_model = None
+_detector = None
+
+def get_model():
+    global _model
+    if _model is None:
+        from ultralytics import YOLO
+        _model = YOLO('yolov8n.pt')
+    return _model
+
+def get_detector():
+    global _detector
+    if _detector is None:
+        _detector = YOLODetector()
+    return _detector
 
 import os
 from django.conf import settings
@@ -660,7 +673,7 @@ def upload_video(request):
             print("✅ Video uploaded successfully at:", uploaded_video_path)
 
             # ✅ Step 2: Process the video
-            processed_video_path = detector.process_video(uploaded_video_path)  # Ensure this function works correctly
+            processed_video_path = get_detector().process_video(uploaded_video_path)
             print("✅ Processed video path:", processed_video_path)
 
             # ✅ Step 3: Ensure processed video exists
@@ -702,8 +715,7 @@ from ultralytics import YOLO
 from pathlib import Path
 from .models import UploadHistory
 
-# Load YOLO model
-model = YOLO(os.path.join(settings.BASE_DIR, 'yolov8n.pt'))
+# Model loaded lazily via get_model()
 
 @csrf_exempt
 def process_video(request):
@@ -743,11 +755,11 @@ def process_video(request):
             if not ret:
                 break
 
-            results = model(frame, imgsz=640, conf=0.3)
+            results = get_model()(frame, imgsz=640, conf=0.3)
             for result in results:
                 for box in result.boxes:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    class_name = model.names[int(box.cls)]
+                    class_name = get_model().names[int(box.cls)]
                     color = (0, 255, 0)
                     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                     cv2.putText(frame, class_name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
