@@ -671,19 +671,61 @@
                         }
 
                         function startDetection() {
-                            fetch('/start_detection/').then(function() {
-                                var btn = document.getElementById('start-detection-btn');
-                                btn.innerText = 'Stop Detection';
-                                btn.setAttribute('onclick', 'stopDetection()');
-                            });
+                            var video = document.getElementById('webcam-video');
+                            if (!video || !video.srcObject) {
+                                alert('Please open webcam first.');
+                                return;
+                            }
+                            var btn = document.getElementById('start-detection-btn');
+                            btn.innerText = 'Stop Detection';
+                            btn.setAttribute('onclick', 'stopDetection()');
+                            detectionActive = true;
+                            runDetection(video);
+                        }
+
+                        var detectionActive = false;
+
+                        function runDetection(video) {
+                            if (!detectionActive) return;
+                            var canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            canvas.getContext('2d').drawImage(video, 0, 0);
+                            canvas.toBlob(function(blob) {
+                                var formData = new FormData();
+                                formData.append('image', blob, 'frame.jpg');
+                                fetch("{% url 'upload_image' %}", {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': getCsrfToken() },
+                                    body: formData
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    if (data.status === 'success') {
+                                        document.getElementById('annotated-image').src = data.annotated_image_url;
+                                        document.getElementById('annotated-image-container').style.display = 'block';
+                                        var list = document.getElementById('detection-list');
+                                        list.innerHTML = '';
+                                        data.detected_objects.forEach(function(obj) {
+                                            var li = document.createElement('li');
+                                            li.textContent = obj.label + ': ' + obj.count;
+                                            list.appendChild(li);
+                                        });
+                                        document.getElementById('detection-results').style.display = 'block';
+                                    }
+                                    if (detectionActive) setTimeout(function() { runDetection(video); }, 2000);
+                                })
+                                .catch(function() {
+                                    if (detectionActive) setTimeout(function() { runDetection(video); }, 2000);
+                                });
+                            }, 'image/jpeg', 0.8);
                         }
 
                         function stopDetection() {
-                            fetch('/stop_detection/').then(function() {
-                                var btn = document.getElementById('start-detection-btn');
-                                btn.innerText = 'Start Detection';
-                                btn.setAttribute('onclick', 'startDetection()');
-                            });
+                            detectionActive = false;
+                            var btn = document.getElementById('start-detection-btn');
+                            btn.innerText = 'Start Detection';
+                            btn.setAttribute('onclick', 'startDetection()');
                         }
 
                         function takeScreenshot() {
