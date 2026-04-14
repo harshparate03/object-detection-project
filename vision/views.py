@@ -532,6 +532,9 @@ def detect_with_roboflow(image):
 
     return annotated, detections
 
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
         try:
