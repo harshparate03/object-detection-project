@@ -486,10 +486,9 @@ def get_dnn_net():
     if _dnn_net is None:
         import os
         from django.conf import settings as s
-        cfg_path = os.path.join(s.BASE_DIR, 'yolov3.cfg')
-        weights_path = os.path.join(s.BASE_DIR, 'yolov3.weights')
+        cfg_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.cfg')
+        weights_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.weights')
         names_path = os.path.join(s.BASE_DIR, 'coco.names')
-        # Load class names from file if available
         if os.path.exists(names_path):
             with open(names_path) as f:
                 global COCO_CLASSES
