@@ -480,6 +480,10 @@ logger = logging.getLogger(__name__)
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
         try:
+            import os
+            from django.conf import settings as django_settings
+            os.makedirs(django_settings.MEDIA_ROOT, exist_ok=True)
+
             uploaded_file = request.FILES['image']
             file_name = default_storage.save(uploaded_file.name, ContentFile(uploaded_file.read()))
             file_path = default_storage.path(file_name)
@@ -604,7 +608,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.conf import settings
-from ultralytics import YOLO
+# YOLO imported lazily in get_model()
 
 import os
 from django.conf import settings
