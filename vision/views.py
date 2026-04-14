@@ -472,10 +472,59 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import cv2
 import numpy as np
-from .video_detect import YOLODetector  # Import your YOLO detector class
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# COCO class names
+COCO_CLASSES = ["background","person","bicycle","car","motorcycle","airplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","couch","potted plant","bed","dining table","toilet","tv","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
+
+_dnn_net = None
+
+def get_dnn_net():
+    global _dnn_net
+    if _dnn_net is None:
+        import urllib.request, os
+        from django.conf import settings as s
+        cfg_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.cfg')
+        weights_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.weights')
+        if not os.path.exists(cfg_path):
+            urllib.request.urlretrieve('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg', cfg_path)
+        if not os.path.exists(weights_path):
+            urllib.request.urlretrieve('https://pjreddie.com/media/files/yolov3-tiny.weights', weights_path)
+        _dnn_net = cv2.dnn.readNet(weights_path, cfg_path)
+    return _dnn_net
+
+def detect_with_dnn(image):
+    net = get_dnn_net()
+    h, w = image.shape[:2]
+    blob = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416), swapRB=True, crop=False)
+    net.setInput(blob)
+    layer_names = net.getLayerNames()
+    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers().flatten()]
+    outputs = net.forward(output_layers)
+    detections = {}
+    boxes, confidences, class_ids = [], [], []
+    for output in outputs:
+        for detection in output:
+            scores = detection[5:]
+            class_id = int(np.argmax(scores))
+            confidence = float(scores[class_id])
+            if confidence > 0.3:
+                cx, cy, bw, bh = (detection[:4] * np.array([w, h, w, h])).astype(int)
+                x, y = cx - bw // 2, cy - bh // 2
+                boxes.append([x, y, bw, bh])
+                confidences.append(confidence)
+                class_ids.append(class_id)
+    indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.3, 0.4)
+    if len(indices) > 0:
+        for i in indices.flatten():
+            x, y, bw, bh = boxes[i]
+            label = COCO_CLASSES[class_ids[i]] if class_ids[i] < len(COCO_CLASSES) else str(class_ids[i])
+            detections[label] = detections.get(label, 0) + 1
+            cv2.rectangle(image, (x, y), (x + bw, y + bh), (0, 255, 0), 2)
+            cv2.putText(image, f"{label} {confidences[i]:.2f}", (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    return image, detections
 
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
@@ -488,23 +537,16 @@ def upload_image(request):
             file_name = default_storage.save(uploaded_file.name, ContentFile(uploaded_file.read()))
             file_path = default_storage.path(file_name)
 
-            logger.info(f"Image saved at: {file_path}")
-
-            detector = get_detector()
             image = cv2.imread(file_path)
-
             if image is None:
                 return JsonResponse({'status': 'error', 'message': 'Failed to read image'}, status=400)
 
-            annotated_image, detections = detector.process_frame(image)
-
-            if annotated_image is None:
-                return JsonResponse({'status': 'error', 'message': 'YOLO processing error'}, status=400)
+            annotated_image, detections = detect_with_dnn(image)
 
             output_name = f"annotated_{uploaded_file.name}"
             default_storage.save(output_name, ContentFile(cv2.imencode('.jpg', annotated_image)[1].tobytes()))
+            from django.conf import settings
             annotated_image_url = request.build_absolute_uri(settings.MEDIA_URL + output_name)
-
             detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
 
             from .models import UploadHistory
@@ -520,10 +562,9 @@ def upload_image(request):
                 'annotated_image_url': annotated_image_url,
                 'detected_objects': detected_objects
             })
-
         except Exception as e:
-            logger.exception("Unexpected error while processing the image.")
-            return JsonResponse({'status': 'error', 'message': f'Error: {str(e)}', 'traceback': __import__("traceback").format_exc()}, status=500)
+            logger.exception("Error processing image")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
