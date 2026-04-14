@@ -580,14 +580,20 @@
                     </script>
 
 
-                    <div align="center" style="position: relative; display: inline-block;">
-                        <video id="webcam-video" width="640" height="480" autoplay muted
-                            style="display: none; border: 2px solid white; border-radius: 10px; margin-top: 20px;"></video>
-                        <canvas id="detection-overlay" width="640" height="480"
-                            style="display: none; position: absolute; top: 20px; left: 0; border-radius: 10px; pointer-events: none;"></canvas>
+                    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
+                        <div style="position: relative; display: inline-block;">
+                            <video id="webcam-video" width="640" height="480" autoplay muted
+                                style="display: none; border: 2px solid white; border-radius: 10px;"></video>
+                            <canvas id="detection-overlay" width="640" height="480"
+                                style="display: none; position: absolute; top: 0; left: 0; border-radius: 10px; pointer-events: none;"></canvas>
+                        </div>
+                        <div id="webcam-detection-results" style="display: none; text-align: center; margin-top: 10px;">
+                            <h4 style="color: white;">Detected Objects:</h4>
+                            <ol id="webcam-detection-list" style="display: flex; justify-content: center; gap: 15px; padding: 0; list-style: none; color: white;"></ol>
+                        </div>
                     </div>
 
-                    <div style="text-align: center; width: 100%; margin-top: 10px; display: none;" id="webcam-buttons">
+                    <div id="webcam-buttons" style="text-align: center; width: 100%; margin-top: 10px; display: none;">
                         <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
                         <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start
                             Detection</button>
@@ -698,11 +704,15 @@
                         function stopDetection() {
                             detectionActive = false;
                             var btn = document.getElementById('start-detection-btn');
-                            btn.innerText = 'Start Detection';
-                            btn.setAttribute('onclick', 'startDetection()');
-                            // Clear overlay
+                            if (btn) {
+                                btn.innerText = 'Start Detection';
+                                btn.setAttribute('onclick', 'startDetection()');
+                            }
                             var overlay = document.getElementById('detection-overlay');
-                            if (overlay) overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                            if (overlay) {
+                                overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                            }
+                            document.getElementById('webcam-detection-results').style.display = 'none';
                         }
 
                         function runDetection(video) {
@@ -732,15 +742,15 @@
                                         };
                                         img.src = data.annotated_image_url;
 
-                                        // Update detection list
-                                        var list = document.getElementById('detection-list');
+                                        // Update webcam detection list (centered below webcam)
+                                        var list = document.getElementById('webcam-detection-list');
                                         list.innerHTML = '';
                                         data.detected_objects.forEach(function(obj) {
                                             var li = document.createElement('li');
                                             li.textContent = obj.label + ': ' + obj.count;
                                             list.appendChild(li);
                                         });
-                                        document.getElementById('detection-results').style.display = 'block';
+                                        document.getElementById('webcam-detection-results').style.display = 'block';
                                     }
                                     if (detectionActive) setTimeout(function() { runDetection(video); }, 2000);
                                 })
