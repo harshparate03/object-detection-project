@@ -327,6 +327,7 @@
                             <div class="button-container" style="display: flex; justify-content: center; gap: 15px;">
                                 <!-- Image Upload Button -->
                                 <form id="image-upload-form" enctype="multipart/form-data">
+                                    {% csrf_token %}
                                     <input type="file" id="image-upload" name="image" accept="image/*"
                                         style="display: none;" />
                                     <button type="button" class="btn-default btn-large"
@@ -1231,10 +1232,13 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token for Django
+                        'X-CSRFToken': document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value,
                     },
                 })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) { throw new Error('Server error: ' + response.status); }
+                        return response.json();
+                    })
                     .then(data => {
                         document.getElementById('ai-loader').style.display = 'none';
 
@@ -1266,13 +1270,12 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        console.error('Image upload error:', error);
                         document.getElementById('ai-loader').style.display = 'none';
+                        alert('Error: ' + error.message);
                     });
             }
         });
-
-
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
