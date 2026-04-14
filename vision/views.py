@@ -735,8 +735,8 @@ def upload_video(request):
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                 writer = cv2.VideoWriter(output_path, fourcc, fps, (out_w, out_h))
 
-            # Call Roboflow only once per second
-            detect_every = max(1, fps)
+            # Call Roboflow twice per second for better accuracy
+            detect_every = max(1, fps // 2)
             frame_count = 0
             last_preds = []
             import base64
@@ -752,16 +752,16 @@ def upload_video(request):
                     frame = cv2.resize(frame, (out_w, out_h))
 
                 if frame_count % detect_every == 1:
-                    # Detect on this frame
-                    _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                    # Detect on this frame - high quality for better accuracy
+                    _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 95])
                     b64 = base64.b64encode(buf).decode('utf-8')
                     try:
                         resp = http_requests.post(
                             f"https://detect.roboflow.com/{ROBOFLOW_MODEL}",
-                            params={"api_key": ROBOFLOW_API_KEY, "confidence": 40},
+                            params={"api_key": ROBOFLOW_API_KEY, "confidence": 25, "overlap": 50},
                             data=b64,
                             headers={"Content-Type": "application/x-www-form-urlencoded"},
-                            timeout=8
+                            timeout=10
                         )
                         last_preds = resp.json().get('predictions', [])
                     except Exception:
