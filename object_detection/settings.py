@@ -5,6 +5,10 @@ load_dotenv()
 
 # Prevent matplotlib from loading GUI backend (saves ~200MB RAM on Render)
 os.environ.setdefault('MPLBACKEND', 'Agg')
+os.environ.setdefault('OMP_NUM_THREADS', '1')
+os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
+os.environ.setdefault('MKL_NUM_THREADS', '1')
+os.environ.setdefault('TORCH_NUM_THREADS', '1')
 
 """
 Django settings for object_detection project.
