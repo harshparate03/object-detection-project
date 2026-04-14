@@ -480,7 +480,13 @@ import requests as http_requests
 logger = logging.getLogger(__name__)
 
 ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY", "8oe91GceFQVvYXU9IjB8")
-ROBOFLOW_MODEL = "coco/13"  # YOLOv8 COCO model
+ROBOFLOW_MODEL = "coco/9"  # YOLOv5 COCO - most reliable public model
+
+COLORS = [
+    (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0),
+    (0, 255, 255), (255, 0, 255), (128, 255, 0), (255, 128, 0),
+    (0, 128, 255), (128, 0, 255)
+]
 
 def detect_with_roboflow(image):
     """Send image to Roboflow API and return annotated image + detections"""
@@ -489,7 +495,7 @@ def detect_with_roboflow(image):
 
     response = http_requests.post(
         f"https://detect.roboflow.com/{ROBOFLOW_MODEL}",
-        params={"api_key": ROBOFLOW_API_KEY, "confidence": 30, "overlap": 40},
+        params={"api_key": ROBOFLOW_API_KEY, "confidence": 25, "overlap": 45},
         data=img_base64,
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
@@ -498,16 +504,31 @@ def detect_with_roboflow(image):
 
     detections = {}
     annotated = image.copy()
+    label_list = []
+
     for pred in result.get('predictions', []):
         label = pred['class']
         conf = pred['confidence']
         x, y, w, h = int(pred['x']), int(pred['y']), int(pred['width']), int(pred['height'])
-        x1, y1 = x - w // 2, y - h // 2
-        x2, y2 = x + w // 2, y + h // 2
+        x1, y1 = max(0, x - w // 2), max(0, y - h // 2)
+        x2, y2 = min(image.shape[1], x + w // 2), min(image.shape[0], y + h // 2)
+
         detections[label] = detections.get(label, 0) + 1
-        cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(annotated, f"{label} {conf:.2f}", (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        label_list.append(label)
+
+        color_idx = hash(label) % len(COLORS)
+        color = COLORS[color_idx]
+
+        # Draw thick bounding box
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 3)
+
+        # Draw label background
+        text = f"{label} {conf:.0%}"
+        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.rectangle(annotated, (x1, y1 - th - 8), (x1 + tw + 4, y1), color, -1)
+        cv2.putText(annotated, text, (x1 + 2, y1 - 4),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
     return annotated, detections
 
 def upload_image(request):
