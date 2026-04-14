@@ -655,16 +655,18 @@
                         // }
 
                         // function stopWebcam() {
-                        //     fetch('/stop_webcam/').then(response => {
-                        //         console.log("Webcam stopped");
-                        //         document.getElementById("webcam-feed").src = "";
-                        //         document.getElementById("webcam-buttons").style.display = "none";
-                        //         document.getElementById("stop-buttons").style.display = "none";
-                        //     });
-                        // }
+                            if (webcamStream) {
+                                webcamStream.getTracks().forEach(function(t) { t.stop(); });
+                                webcamStream = null;
+                            }
+                            var v = document.getElementById('webcam-video');
+                            if (v) { v.srcObject = null; v.style.display = 'none'; }
+                            document.getElementById('webcam-feed').src = '';
+                            document.getElementById('webcam-buttons').style.display = 'none';
+                        }
 
 
-                        // function takeScreenshot() {
+// function takeScreenshot() {
                         //     let videoElement = document.getElementById("webcam-feed");
                         //     let canvas = document.getElementById("screenshot-canvas");
                         //     let context = canvas.getContext("2d");
