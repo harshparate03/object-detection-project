@@ -580,16 +580,14 @@
                     </script>
 
 
-                    <div style="display: flex; justify-content: center; margin-top: 20px;">
-                        <div style="position: relative; display: inline-block;">
-                            <video id="webcam-video" width="640" height="480" autoplay muted
-                                style="display: none; border: 2px solid white; border-radius: 10px; display: block;"></video>
-                            <canvas id="detection-overlay" width="640" height="480"
-                                style="display: none; position: absolute; top: 0; left: 0; border-radius: 10px; pointer-events: none;"></canvas>
-                        </div>
+                    <div align="center" style="position: relative; display: inline-block;">
+                        <video id="webcam-video" width="640" height="480" autoplay muted
+                            style="display: none; border: 2px solid white; border-radius: 10px; margin-top: 20px;"></video>
+                        <canvas id="detection-overlay" width="640" height="480"
+                            style="display: none; position: absolute; top: 20px; left: 0; border-radius: 10px; pointer-events: none;"></canvas>
                     </div>
 
-                    <div id="webcam-buttons" style="text-align: center; width: 100%; display: none;">
+                    <div style="text-align: center; width: 100%; margin-top: 10px; display: none;" id="webcam-buttons">
                         <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
                         <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start
                             Detection</button>
@@ -633,6 +631,7 @@
 
                     <script>
                         var webcamStream = null;
+                        var detectionActive = false;
 
                         function getCsrfToken() {
                             var name = 'csrftoken';
@@ -656,10 +655,7 @@
                                 var webcamVideo = document.getElementById('webcam-video');
                                 webcamVideo.srcObject = stream;
                                 webcamVideo.style.display = 'block';
-                                var overlay = document.getElementById('detection-overlay');
-                                overlay.style.display = 'block';
-                                overlay.width = 640;
-                                overlay.height = 480;
+                                document.getElementById('detection-overlay').style.display = 'block';
                                 document.getElementById('webcam-buttons').style.display = 'inline-block';
                             })
                             .catch(function(err) {
@@ -691,14 +687,23 @@
                                 alert('Please open webcam first.');
                                 return;
                             }
+                            if (detectionActive) return; // already running
+                            detectionActive = true;
                             var btn = document.getElementById('start-detection-btn');
                             btn.innerText = 'Stop Detection';
                             btn.setAttribute('onclick', 'stopDetection()');
-                            detectionActive = true;
                             runDetection(video);
                         }
 
-                        var detectionActive = false;
+                        function stopDetection() {
+                            detectionActive = false;
+                            var btn = document.getElementById('start-detection-btn');
+                            btn.innerText = 'Start Detection';
+                            btn.setAttribute('onclick', 'startDetection()');
+                            // Clear overlay
+                            var overlay = document.getElementById('detection-overlay');
+                            if (overlay) overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                        }
 
                         function runDetection(video) {
                             if (!detectionActive) return;
