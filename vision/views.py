@@ -472,60 +472,42 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import cv2
 import numpy as np
+import base64
+import requests as http_requests
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# COCO class names
-COCO_CLASSES = ["background","person","bicycle","car","motorcycle","airplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","couch","potted plant","bed","dining table","toilet","tv","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"]
+ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY", "8oe91GceFQVvYXU9IjB8")
+ROBOFLOW_MODEL = "coco/13"  # YOLOv8 COCO model
 
-_dnn_net = None
+def detect_with_roboflow(image):
+    """Send image to Roboflow API and return annotated image + detections"""
+    _, buffer = cv2.imencode('.jpg', image)
+    img_base64 = base64.b64encode(buffer).decode('utf-8')
 
-def get_dnn_net():
-    global _dnn_net
-    if _dnn_net is None:
-        import os
-        from django.conf import settings as s
-        cfg_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.cfg')
-        weights_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.weights')
-        names_path = os.path.join(s.BASE_DIR, 'coco.names')
-        if os.path.exists(names_path):
-            with open(names_path) as f:
-                global COCO_CLASSES
-                COCO_CLASSES = ['background'] + [line.strip() for line in f.readlines()]
-        _dnn_net = cv2.dnn.readNet(weights_path, cfg_path)
-    return _dnn_net
+    response = http_requests.post(
+        f"https://detect.roboflow.com/{ROBOFLOW_MODEL}",
+        params={"api_key": ROBOFLOW_API_KEY, "confidence": 30, "overlap": 40},
+        data=img_base64,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
+    response.raise_for_status()
+    result = response.json()
 
-def detect_with_dnn(image):
-    net = get_dnn_net()
-    h, w = image.shape[:2]
-    blob = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416), swapRB=True, crop=False)
-    net.setInput(blob)
-    layer_names = net.getLayerNames()
-    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers().flatten()]
-    outputs = net.forward(output_layers)
     detections = {}
-    boxes, confidences, class_ids = [], [], []
-    for output in outputs:
-        for detection in output:
-            scores = detection[5:]
-            class_id = int(np.argmax(scores))
-            confidence = float(scores[class_id])
-            if confidence > 0.3:
-                cx, cy, bw, bh = (detection[:4] * np.array([w, h, w, h])).astype(int)
-                x, y = cx - bw // 2, cy - bh // 2
-                boxes.append([x, y, bw, bh])
-                confidences.append(confidence)
-                class_ids.append(class_id)
-    indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.3, 0.4)
-    if len(indices) > 0:
-        for i in indices.flatten():
-            x, y, bw, bh = boxes[i]
-            label = COCO_CLASSES[class_ids[i]] if class_ids[i] < len(COCO_CLASSES) else str(class_ids[i])
-            detections[label] = detections.get(label, 0) + 1
-            cv2.rectangle(image, (x, y), (x + bw, y + bh), (0, 255, 0), 2)
-            cv2.putText(image, f"{label} {confidences[i]:.2f}", (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    return image, detections
+    annotated = image.copy()
+    for pred in result.get('predictions', []):
+        label = pred['class']
+        conf = pred['confidence']
+        x, y, w, h = int(pred['x']), int(pred['y']), int(pred['width']), int(pred['height'])
+        x1, y1 = x - w // 2, y - h // 2
+        x2, y2 = x + w // 2, y + h // 2
+        detections[label] = detections.get(label, 0) + 1
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(annotated, f"{label} {conf:.2f}", (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    return annotated, detections
 
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
@@ -535,29 +517,46 @@ def upload_image(request):
             os.makedirs(django_settings.MEDIA_ROOT, exist_ok=True)
 
             uploaded_file = request.FILES['image']
-            file_name = default_storage.save(uploaded_file.name, ContentFile(uploaded_file.read()))
+            file_bytes = uploaded_file.read()
+            file_name = default_storage.save(uploaded_file.name, ContentFile(file_bytes))
             file_path = default_storage.path(file_name)
 
             image = cv2.imread(file_path)
             if image is None:
                 return JsonResponse({'status': 'error', 'message': 'Failed to read image'}, status=400)
 
-            annotated_image, detections = detect_with_dnn(image)
+            annotated_image, detections = detect_with_roboflow(image)
 
-            # Encode annotated image as base64 data URL (no file storage needed)
-            _, buffer = cv2.imencode('.jpg', annotated_image)
-            import base64
-            img_base64 = base64.b64encode(buffer).decode('utf-8')
+            # Return as base64 data URL
+            _, out_buffer = cv2.imencode('.jpg', annotated_image)
+            img_base64 = base64.b64encode(out_buffer).decode('utf-8')
             annotated_image_url = f"data:image/jpeg;base64,{img_base64}"
 
-            # Also save to disk for history
+            detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
+
+            from .models import UploadHistory
+            from django.utils.timezone import now
             output_name = f"annotated_{uploaded_file.name}"
             try:
-                default_storage.save(output_name, ContentFile(buffer.tobytes()))
+                default_storage.save(output_name, ContentFile(out_buffer.tobytes()))
             except Exception:
                 pass
+            UploadHistory.objects.create(
+                user=request.user,
+                image=output_name,
+                detected_objects=str(detected_objects),
+                uploaded_at=now()
+            )
+            return JsonResponse({
+                'status': 'success',
+                'annotated_image_url': annotated_image_url,
+                'detected_objects': detected_objects
+            })
+        except Exception as e:
+            logger.exception("Error processing image")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-            detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
             from .models import UploadHistory
             from django.utils.timezone import now
