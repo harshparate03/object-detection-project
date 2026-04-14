@@ -7,8 +7,6 @@ from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 import cv2
 import numpy as np
-import torch
-from ultralytics import YOLO
 
 class YOLODetector:
     """Optimized YOLO Object Detection implementation"""
@@ -47,6 +45,7 @@ class YOLODetector:
         
         # Auto-detect device if not specified
         if device is None:
+            import torch
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         else:
             self.device = device
@@ -55,10 +54,10 @@ class YOLODetector:
         
         # Load model with optimizations
         try:
+            from ultralytics import YOLO
+            import torch
             self.model = YOLO(model_path)
             self.model.to(self.device)
-            
-            # Enable model optimizations if using CUDA
             if self.device == 'cuda':
                 self.logger.info("Enabling CUDA optimizations")
                 torch.backends.cudnn.benchmark = True

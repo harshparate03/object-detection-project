@@ -15,7 +15,7 @@ import random
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required
-from .image_detect import detect_objects  # Assuming `detect_objects` is your YOLO detection function
+# detect_objects imported lazily in views
 import ast
 from django.utils.timezone import localtime
 from datetime import timedelta
@@ -615,7 +615,6 @@ def edit_user(request, user_id):
 import os
 import cv2
 import time
-import torch
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
@@ -711,7 +710,6 @@ import json
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from ultralytics import YOLO
 from pathlib import Path
 from .models import UploadHistory
 
