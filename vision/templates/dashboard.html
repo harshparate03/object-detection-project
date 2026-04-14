@@ -703,16 +703,21 @@
 
                         function stopDetection() {
                             detectionActive = false;
+                            // Reset button
                             var btn = document.getElementById('start-detection-btn');
                             if (btn) {
                                 btn.innerText = 'Start Detection';
                                 btn.setAttribute('onclick', 'startDetection()');
                             }
+                            // Hide and clear overlay canvas completely
                             var overlay = document.getElementById('detection-overlay');
                             if (overlay) {
                                 overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                                overlay.style.display = 'none';
                             }
-                            document.getElementById('webcam-detection-results').style.display = 'none';
+                            // Hide detection results
+                            var wr = document.getElementById('webcam-detection-results');
+                            if (wr) wr.style.display = 'none';
                         }
 
                         function runDetection(video) {
