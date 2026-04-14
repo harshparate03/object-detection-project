@@ -533,29 +533,20 @@ def detect_with_roboflow(image):
     return annotated, detections
 
 def upload_image(request):
-    if request.method == 'POST' and (request.FILES.get('image') or request.POST.get('webcam_base64')):
+    if request.method == 'POST' and request.FILES.get('image'):
         try:
             import os
             from django.conf import settings as django_settings
             os.makedirs(django_settings.MEDIA_ROOT, exist_ok=True)
 
-            if request.POST.get('webcam_base64'):
-                # Handle webcam base64 input
-                import base64 as b64
-                img_data = b64.b64decode(request.POST.get('webcam_base64'))
-                import numpy as np
-                nparr = np.frombuffer(img_data, np.uint8)
-                image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                if image is None:
-                    return JsonResponse({'status': 'error', 'message': 'Failed to decode webcam image'}, status=400)
-            else:
-                uploaded_file = request.FILES['image']
-                file_bytes = uploaded_file.read()
-                file_name = default_storage.save(uploaded_file.name, ContentFile(file_bytes))
-                file_path = default_storage.path(file_name)
-                image = cv2.imread(file_path)
-                if image is None:
-                    return JsonResponse({'status': 'error', 'message': 'Failed to read image'}, status=400)
+            uploaded_file = request.FILES['image']
+            file_bytes = uploaded_file.read()
+            file_name = default_storage.save(uploaded_file.name, ContentFile(file_bytes))
+            file_path = default_storage.path(file_name)
+
+            image = cv2.imread(file_path)
+            if image is None:
+                return JsonResponse({'status': 'error', 'message': 'Failed to read image'}, status=400)
 
             annotated_image, detections = detect_with_roboflow(image)
 
@@ -568,18 +559,17 @@ def upload_image(request):
 
             from .models import UploadHistory
             from django.utils.timezone import now
-            if not request.POST.get('webcam_base64'):  # only save to history for file uploads
-                output_name = f"annotated_{request.FILES['image'].name}"
-                try:
-                    default_storage.save(output_name, ContentFile(out_buffer.tobytes()))
-                except Exception:
-                    pass
-                UploadHistory.objects.create(
-                    user=request.user,
-                    image=output_name,
-                    detected_objects=str(detected_objects),
-                    uploaded_at=now()
-                )
+            output_name = f"annotated_{uploaded_file.name}"
+            try:
+                default_storage.save(output_name, ContentFile(out_buffer.tobytes()))
+            except Exception:
+                pass
+            UploadHistory.objects.create(
+                user=request.user,
+                image=output_name,
+                detected_objects=str(detected_objects),
+                uploaded_at=now()
+            )
             return JsonResponse({
                 'status': 'success',
                 'annotated_image_url': annotated_image_url,
