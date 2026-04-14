@@ -413,7 +413,22 @@
 
                     </div>
                     <script>
-                        function clearAllPanels() {
+                        function getCsrfToken() {
+            // Read CSRF token from cookie - works always
+            var name = 'csrftoken';
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var c = cookies[i].trim();
+                if (c.startsWith(name + '=')) {
+                    return decodeURIComponent(c.substring(name.length + 1));
+                }
+            }
+            // Fallback: read from form
+            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+            return el ? el.value : '';
+        }
+
+        function clearAllPanels() {
             // Hide image panel
             document.getElementById('annotated-image-container').style.display = 'none';
             document.getElementById('annotated-image').src = '';
@@ -470,7 +485,7 @@
                         //                 method: "POST",
                         //                 body: formData,
                         //                 headers: {
-                        //                     "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                        //                     "X-CSRFToken": getCsrfToken()
                         //                 },
                         //             })
                         //             .then((response) => {
@@ -565,7 +580,7 @@
                                         method: "POST",
                                         body: formData,
                                         headers: {
-                                            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                                            "X-CSRFToken": getCsrfToken()
                                         },
                                     })
                                         .then((response) => {
@@ -758,7 +773,7 @@
                                     fetch("{% url 'upload_image' %}", {
                                         method: 'POST',
                                         headers: {
-                                            'X-CSRFToken': document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value
+                                            'X-CSRFToken': getCsrfToken()
                                         },
                                         body: formData
                                     })
@@ -1347,7 +1362,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value,
+                        'X-CSRFToken': getCsrfToken(),
                     },
                 })
                     .then(response => {
@@ -1532,7 +1547,7 @@
 
             const formData = new FormData();
             formData.append("video", videoFile);
-            const csrfToken = document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value;
+            const csrfToken = getCsrfToken();
 
             document.getElementById("ai-loader-video").style.display = "flex";
 
