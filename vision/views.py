@@ -484,14 +484,16 @@ _dnn_net = None
 def get_dnn_net():
     global _dnn_net
     if _dnn_net is None:
-        import urllib.request, os
+        import os
         from django.conf import settings as s
-        cfg_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.cfg')
-        weights_path = os.path.join(s.BASE_DIR, 'yolov3-tiny.weights')
-        if not os.path.exists(cfg_path):
-            urllib.request.urlretrieve('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg', cfg_path)
-        if not os.path.exists(weights_path):
-            urllib.request.urlretrieve('https://pjreddie.com/media/files/yolov3-tiny.weights', weights_path)
+        cfg_path = os.path.join(s.BASE_DIR, 'yolov3.cfg')
+        weights_path = os.path.join(s.BASE_DIR, 'yolov3.weights')
+        names_path = os.path.join(s.BASE_DIR, 'coco.names')
+        # Load class names from file if available
+        if os.path.exists(names_path):
+            with open(names_path) as f:
+                global COCO_CLASSES
+                COCO_CLASSES = ['background'] + [line.strip() for line in f.readlines()]
         _dnn_net = cv2.dnn.readNet(weights_path, cfg_path)
     return _dnn_net
 
