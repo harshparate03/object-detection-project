@@ -3,6 +3,9 @@ import mimetypes
 from dotenv import load_dotenv
 load_dotenv()
 
+# Prevent matplotlib from loading GUI backend (saves ~200MB RAM on Render)
+os.environ.setdefault('MPLBACKEND', 'Agg')
+
 """
 Django settings for object_detection project.
 
@@ -159,6 +162,7 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
