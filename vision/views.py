@@ -501,7 +501,6 @@ def detect_with_roboflow(image):
     )
     response.raise_for_status()
     result = response.json()
-    logger.info(f"Roboflow response: {result}")
     print(f"Roboflow predictions: {result.get('predictions', [])}")
 
     detections = {}
