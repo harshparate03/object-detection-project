@@ -628,95 +628,34 @@
                     <!-- For rendering the screenshot -->
 
                     <script>
-                        // Function to handle video upload
-                        function handleVideoUpload(input) {
-                            if (input.files && input.files[0] && input.files[0].type.startsWith('video/')) {
-                                const file = input.files[0];
-                                console.log('Video selected:', file);
-                                // Further processing (e.g., preview or upload to a server) can be done here
-                            } else {
-                                alert('Please select a valid video file.');
-                            }
-                        }
-
-
-                        // function openWebcam() {
-                        //     document.getElementById("webcam-feed").src = "/video_feed/";
-                        //     document.getElementById("webcam-buttons").style.display = "block";
-                        // }
-
-                        // function startDetection() {
-                        //     fetch('/start_detection/').then(response => console.log("Detection started"));
-                        //     document.getElementById("stop-buttons").style.display = "block";
-                        // }
-
-                        // function stopDetection() {
-                        //     fetch('/stop_detection/').then(response => console.log("Detection stopped"));
-                        // }
-
-                        // function stopWebcam() {
-                            if (webcamStream) {
-                                webcamStream.getTracks().forEach(function(t) { t.stop(); });
-                                webcamStream = null;
-                            }
-                            var v = document.getElementById('webcam-video');
-                            if (v) { v.srcObject = null; v.style.display = 'none'; }
-                            document.getElementById('webcam-feed').src = '';
-                            document.getElementById('webcam-buttons').style.display = 'none';
-                        }
-
-
-// function takeScreenshot() {
-                        //     let videoElement = document.getElementById("webcam-feed");
-                        //     let canvas = document.getElementById("screenshot-canvas");
-                        //     let context = canvas.getContext("2d");
-
-                        //     canvas.width = videoElement.videoWidth;
-                        //     canvas.height = videoElement.videoHeight;
-                        //     context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-                        //     let image = canvas.toDataURL("image/png");
-                        //     let link = document.createElement("a");
-                        //     link.href = image;
-                        //     link.download = "screenshot.png";
-                        //     link.click();
-                        // }
                         var webcamStream = null;
 
-                        function openWebcam() {
-                            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                                navigator.mediaDevices.getUserMedia({ video: true })
-                                .then(function(stream) {
-                                    webcamStream = stream;
-                                    var webcamVideo = document.getElementById("webcam-video");
-                                    webcamVideo.srcObject = stream;
-                                    webcamVideo.style.display = "block";
-                                    document.getElementById("webcam-buttons").style.display = "inline-block";
-                                    document.getElementById("stop-webcam-btn").style.display = "inline-block";
-                                })
-                                .catch(function(err) {
-                                    alert("Cannot access webcam: " + err.message);
-                                });
-                            } else {
-                                alert("Webcam not supported in this browser.");
+                        function getCsrfToken() {
+                            var name = 'csrftoken';
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var c = cookies[i].trim();
+                                if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
                             }
+                            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+                            return el ? el.value : '';
                         }
 
-                        function startDetection() {
-                            fetch('/start_detection/').then(response => {
-                                console.log("Detection started");
-                                let startButton = document.getElementById("start-detection-btn");
-                                startButton.innerText = "Stop Detection";
-                                startButton.setAttribute("onclick", "stopDetection()");
-                            });
-                        }
-
-                        function stopDetection() {
-                            fetch('/stop_detection/').then(response => {
-                                console.log("Detection stopped");
-                                let stopButton = document.getElementById("start-detection-btn");
-                                stopButton.innerText = "Start Detection";
-                                stopButton.setAttribute("onclick", "startDetection()");
+                        function openWebcam() {
+                            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                alert('Webcam not supported in this browser.');
+                                return;
+                            }
+                            navigator.mediaDevices.getUserMedia({ video: true })
+                            .then(function(stream) {
+                                webcamStream = stream;
+                                var webcamVideo = document.getElementById('webcam-video');
+                                webcamVideo.srcObject = stream;
+                                webcamVideo.style.display = 'block';
+                                document.getElementById('webcam-buttons').style.display = 'inline-block';
+                            })
+                            .catch(function(err) {
+                                alert('Cannot access webcam: ' + err.message);
                             });
                         }
 
@@ -725,39 +664,48 @@
                                 webcamStream.getTracks().forEach(function(track) { track.stop(); });
                                 webcamStream = null;
                             }
-                            var webcamVideo = document.getElementById("webcam-video");
-                            webcamVideo.srcObject = null;
-                            webcamVideo.style.display = "none";
-                            document.getElementById("webcam-feed").src = "";
-                            document.getElementById("webcam-buttons").style.display = "none";
+                            var v = document.getElementById('webcam-video');
+                            if (v) { v.srcObject = null; v.style.display = 'none'; }
+                            document.getElementById('webcam-feed').src = '';
+                            document.getElementById('webcam-buttons').style.display = 'none';
+                        }
+
+                        function startDetection() {
+                            fetch('/start_detection/').then(function() {
+                                var btn = document.getElementById('start-detection-btn');
+                                btn.innerText = 'Stop Detection';
+                                btn.setAttribute('onclick', 'stopDetection()');
+                            });
+                        }
+
+                        function stopDetection() {
+                            fetch('/stop_detection/').then(function() {
+                                var btn = document.getElementById('start-detection-btn');
+                                btn.innerText = 'Start Detection';
+                                btn.setAttribute('onclick', 'startDetection()');
+                            });
                         }
 
                         function takeScreenshot() {
-                            let videoElement = document.getElementById("webcam-feed");
-                            let canvas = document.getElementById("screenshot-canvas");
-                            let context = canvas.getContext("2d");
-
-                            if (!videoElement || videoElement.srcObject === null) {
-                                alert("Webcam not started or no video feed detected.");
+                            var videoElement = document.getElementById('webcam-video');
+                            if (!videoElement || !videoElement.srcObject) {
+                                alert('Please open webcam first.');
                                 return;
                             }
-
+                            var canvas = document.getElementById('screenshot-canvas');
+                            var context = canvas.getContext('2d');
                             canvas.width = videoElement.videoWidth || 640;
                             canvas.height = videoElement.videoHeight || 480;
-
                             context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-                            // Convert canvas to a valid image format (JPEG to avoid corruption)
-                            canvas.toBlob(function (blob) {
-                                let link = document.createElement("a");
+                            canvas.toBlob(function(blob) {
+                                var link = document.createElement('a');
                                 link.href = URL.createObjectURL(blob);
-                                link.download = "screenshot.jpg"; // Save as JPG to avoid PNG corruption
+                                link.download = 'screenshot.jpg';
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
-                            }, "image/jpeg", 0.95); // Use high-quality JPEG
+                            }, 'image/jpeg', 0.95);
                         }
-
 
                     </script>
 
