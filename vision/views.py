@@ -15,7 +15,7 @@ import random
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required
-# detect_objects imported lazily in views
+from .image_detect import detect_objects  # Assuming `detect_objects` is your YOLO detection function
 import ast
 from django.utils.timezone import localtime
 from datetime import timedelta
