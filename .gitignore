@@ -29,6 +29,7 @@ db.sqlite3
 *.mkv
 *.mov
 media/
+!vision/static/media/
 output/
 uploads/
 
