@@ -310,8 +310,6 @@ from typing import Dict, Tuple, Optional, Union
 from django.conf import settings
 import cv2
 import numpy as np
-import torch
-from ultralytics import YOLO
 
 class ColorPalette:
     """Manage color generation for object detection"""
@@ -350,6 +348,7 @@ class YOLODetector:
         
         # Load model
         try:
+            from ultralytics import YOLO
             self.model = YOLO(model_path)
             self.logger.info(f"Loaded YOLO model: {model_path}")
         except Exception as e:

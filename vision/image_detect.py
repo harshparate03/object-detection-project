@@ -6,8 +6,6 @@ import argparse
 import time
 import cv2
 import os
-from ultralytics import YOLO
-import torch
 from pathlib import Path
 
 def parse_arguments():
@@ -32,6 +30,8 @@ def create_output_folder(output_path):
 def load_model(model_path, device):
     """Load YOLO model"""
     try:
+        from ultralytics import YOLO
+        import torch
         print(f"Loading YOLO model: {model_path}")
         model = YOLO(model_path)
         model.to(device)
@@ -122,10 +122,10 @@ def process_image(image_path, model, conf_threshold, size, output_folder):
         print(f"Error processing {image_path}: {e}")
         return None
 
-def detect_objects(input_path, model_path, conf_threshold, size, output_folder):
+def detect_objects(input_path, model_path='yolov8n.pt', conf_threshold=0.3, size=640, output_folder='outputs'):
     """Main detection function"""
     try:
-        # Check GPU availability
+        import torch
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(f"Using device: {device}")
 
