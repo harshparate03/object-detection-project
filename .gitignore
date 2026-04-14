@@ -18,7 +18,6 @@ db.sqlite3
 .env.*
 
 # --- 🧠 ML / Large Model Files ---
-*.pt
 *.h5
 *.pkl
 *.joblib
