@@ -728,7 +728,12 @@ def upload_video(request):
             os.makedirs(output_videos_dir, exist_ok=True)
             output_path = os.path.join(output_videos_dir, 'detected_' + safe_filename.replace('.mp4', '') + '.mp4')
 
-            writer = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (out_w, out_h))
+            # Try H.264 first (browser compatible), fallback to mp4v
+            fourcc = cv2.VideoWriter_fourcc(*'avc1')
+            writer = cv2.VideoWriter(output_path, fourcc, fps, (out_w, out_h))
+            if not writer.isOpened():
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                writer = cv2.VideoWriter(output_path, fourcc, fps, (out_w, out_h))
 
             # Call Roboflow only once per second
             detect_every = max(1, fps)
