@@ -410,70 +410,7 @@
 
                     </div>
                     <script>
-                        // Handle image upload
-                        function handleImageUpload(input) {
-                            const file = input.files[0];
-                            if (file && file.type.startsWith('image/')) {
-                                const formData = new FormData();
-                                formData.append('image', file);
-
-                                // Show the AI loader while processing (optional)
-                                document.getElementById('ai-loader').style.display = 'flex';
-
-                                fetch("{% url 'upload_image' %}", {  // Ensure the URL is correct for your view
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'X-CSRFToken': '{{ csrf_token }}',  // Include CSRF token for Django
-                                    },
-                                })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        // Hide the loader after processing
-                                        document.getElementById('ai-loader').style.display = 'none';
-                                        console.log("-00000000=====");
-
-                                        if (data.status === 'success') {
-                                            // Show the processed image
-                                            console.log("processed image", data);
-
-                                            const processedImage = document.getElementById('processed-image');
-                                            processedImage.src = data.annotated_image_url;
-                                            document.getElementById('processed-image-container').style.display = 'block';
-
-                                            // Display detected objects below the image
-                                            const detectionsList = document.getElementById('detections-list');
-                                            detectionsList.innerHTML = '';  // Clear any previous detections
-
-                                            data.detected_objects.forEach(item => {
-                                                const listItem = document.createElement('li');
-                                                listItem.textContent = `${item.label}: ${item.count} detected`;
-                                                detectionsList.appendChild(listItem);
-                                            });
-
-                                            // Show the "Generate Report" button
-                                            document.getElementById('generate-report-button').style.display = '';
-                                        } else {
-                                            alert('Error processing the image: ' + data.message);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        // Hide the loader in case of error
-                                        document.getElementById('ai-loader').style.display = 'none';
-                                        alert('An error occurred while processing the image');
-                                    });
-                            } else {
-                                alert('Please upload a valid image');
-                            }
-                        }
-
-                        // Function to generate the report
-                        function generateReport() {
-                            alert('Report is being generated...');
-                            // Implement the report generation logic here
-                            // For example, you could trigger a server request to generate the report
-                        }
-
+                        // placeholder - real handleImageUpload is defined below
                     </script>
 
                     <!-- handle video upload -->
@@ -690,20 +627,6 @@
                     <!-- For rendering the screenshot -->
 
                     <script>
-                        // Function to handle image upload
-                        function handleImageUpload(input) {
-                            if (input.files && input.files[0] && input.files[0].type.startsWith('image/')) {
-                                const file = input.files[0];
-                                console.log('Image selected:', file);
-                                document.getElementById('generate-report-button').style.display = 'flex';
-
-
-                                // Further processing (e.g., preview or upload to a server) can be done here
-                            } else {
-                                alert('Please select a valid image file.');
-                            }
-                        }
-
                         // Function to handle video upload
                         function handleVideoUpload(input) {
                             if (input.files && input.files[0] && input.files[0].type.startsWith('video/')) {
@@ -1398,10 +1321,21 @@
 
             // **Add Processed Image**
             const img = document.getElementById("annotated-image");
-            if (img) {
-                const imgData = img.src;
-                doc.addImage(imgData, "JPEG", 50, yPosition, 100, 80);
-                yPosition += 90; // Adjust position after image
+            if (img && img.src) {
+                try {
+                    // Convert image to base64 via canvas to avoid CORS issues
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const imgData = canvas.toDataURL('image/jpeg');
+                    doc.addImage(imgData, "JPEG", 50, yPosition, 100, 80);
+                    yPosition += 90;
+                } catch(e) {
+                    doc.text("[Image could not be embedded]", 50, yPosition);
+                    yPosition += 10;
+                }
             }
 
             // **Footer Section**
