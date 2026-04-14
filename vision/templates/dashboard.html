@@ -413,16 +413,14 @@
 
                     </div>
                     <script>
-                        // Helper: clear all result panels
-        function clearAllPanels() {
-            // Image panel
+                        // function clearAllPanels() {
             document.getElementById('annotated-image-container').style.display = 'none';
             document.getElementById('annotated-image').src = '';
             document.getElementById('detection-results').style.display = 'none';
             document.getElementById('detection-list').innerHTML = '';
             document.getElementById('generate-report-button').style.display = 'none';
-            // Video panel
-            const v = document.getElementById('annotated-video');
+            document.getElementById('ai-loader').style.display = 'none';
+            var v = document.getElementById('annotated-video');
             v.pause();
             document.getElementById('video-source').src = '';
             v.load();
@@ -430,12 +428,11 @@
             document.getElementById('detection-results-video').style.display = 'none';
             document.getElementById('video-detection-list').innerHTML = '';
             document.getElementById('generate-report-video-button').style.display = 'none';
-            // Webcam panel
+            document.getElementById('ai-loader-video').style.display = 'none';
             document.getElementById('webcam-feed').src = '';
             document.getElementById('webcam-buttons').style.display = 'none';
-            document.getElementById('ai-loader').style.display = 'none';
-            document.getElementById('ai-loader-video').style.display = 'none';
         }
+                    </script>
 
                     <!-- handle video upload -->
                     <script>
@@ -548,6 +545,7 @@
 
             function handleVideoUpload(input) {
                                 const file = input.files[0];
+
                                 if (file && file.type.startsWith("video/")) {
                                     clearAllPanels();
                                     const formData = new FormData();
@@ -1288,6 +1286,11 @@
                             return;
                         }
                         if (data.status === 'success') {
+                            // Hide video panel when new image is uploaded
+                            document.getElementById('annotated-video-container').style.display = 'none';
+                            document.getElementById('detection-results-video').style.display = 'none';
+                            document.getElementById('generate-report-video-button').style.display = 'none';
+
                             // Show the processed image
                             document.getElementById('annotated-image').src = data.annotated_image_url;
                             document.getElementById('annotated-image-container').style.display = 'block';
@@ -1472,6 +1475,11 @@
 
                     let videoUrl = data.processed_video_url.trim();
                     console.log("✅ Processed Video URL:", videoUrl);
+
+                    // Hide image panel when video is shown
+                    document.getElementById('annotated-image-container').style.display = 'none';
+                    document.getElementById('detection-results').style.display = 'none';
+                    document.getElementById('generate-report-button').style.display = 'none';
 
                     let videoElement = document.getElementById("annotated-video");
                     let sourceElement = document.getElementById("video-source");
