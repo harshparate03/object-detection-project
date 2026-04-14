@@ -543,10 +543,19 @@ def upload_image(request):
 
             annotated_image, detections = detect_with_dnn(image)
 
+            # Encode annotated image as base64 data URL (no file storage needed)
+            _, buffer = cv2.imencode('.jpg', annotated_image)
+            import base64
+            img_base64 = base64.b64encode(buffer).decode('utf-8')
+            annotated_image_url = f"data:image/jpeg;base64,{img_base64}"
+
+            # Also save to disk for history
             output_name = f"annotated_{uploaded_file.name}"
-            default_storage.save(output_name, ContentFile(cv2.imencode('.jpg', annotated_image)[1].tobytes()))
-            from django.conf import settings
-            annotated_image_url = request.build_absolute_uri(settings.MEDIA_URL + output_name)
+            try:
+                default_storage.save(output_name, ContentFile(buffer.tobytes()))
+            except Exception:
+                pass
+
             detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
 
             from .models import UploadHistory

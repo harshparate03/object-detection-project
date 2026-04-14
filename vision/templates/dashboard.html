@@ -1336,16 +1336,9 @@
 
             // **Add Processed Image**
             const img = document.getElementById("annotated-image");
-            if (img && img.src) {
+            if (img && img.src && img.src.startsWith('data:')) {
                 try {
-                    // Convert image to base64 via canvas to avoid CORS issues
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.naturalWidth || img.width;
-                    canvas.height = img.naturalHeight || img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    const imgData = canvas.toDataURL('image/jpeg');
-                    doc.addImage(imgData, "JPEG", 50, yPosition, 100, 80);
+                    doc.addImage(img.src, "JPEG", 50, yPosition, 100, 80);
                     yPosition += 90;
                 } catch(e) {
                     doc.text("[Image could not be embedded]", 50, yPosition);
