@@ -580,9 +580,11 @@
                     </script>
 
 
-                    <div align="center">
-                        <video id="webcam-video" width="640" height="480" autoplay
-                            style="display: none; border: 1px solid black; margin-top: 20px; transform: scaleX(-1);"></video>
+                    <div align="center" style="position: relative; display: inline-block;">
+                        <video id="webcam-video" width="640" height="480" autoplay muted
+                            style="display: none; border: 2px solid white; border-radius: 10px; margin-top: 20px;"></video>
+                        <canvas id="detection-overlay" width="640" height="480"
+                            style="display: none; position: absolute; top: 20px; left: 0; border-radius: 10px; pointer-events: none;"></canvas>
                     </div>
 
                     <div id="webcam-buttons" style="text-align: center; width: 100%; display: none;">
@@ -652,6 +654,7 @@
                                 var webcamVideo = document.getElementById('webcam-video');
                                 webcamVideo.srcObject = stream;
                                 webcamVideo.style.display = 'block';
+                                document.getElementById('detection-overlay').style.display = 'block';
                                 document.getElementById('webcam-buttons').style.display = 'inline-block';
                             })
                             .catch(function(err) {
@@ -660,14 +663,21 @@
                         }
 
                         function stopWebcam() {
+                            detectionActive = false;
                             if (webcamStream) {
                                 webcamStream.getTracks().forEach(function(track) { track.stop(); });
                                 webcamStream = null;
                             }
                             var v = document.getElementById('webcam-video');
                             if (v) { v.srcObject = null; v.style.display = 'none'; }
+                            var overlay = document.getElementById('detection-overlay');
+                            if (overlay) { overlay.style.display = 'none'; overlay.getContext('2d').clearRect(0,0,overlay.width,overlay.height); }
                             document.getElementById('webcam-feed').src = '';
                             document.getElementById('webcam-buttons').style.display = 'none';
+                            document.getElementById('detection-results').style.display = 'none';
+                            var btn = document.getElementById('start-detection-btn');
+                            btn.innerText = 'Start Detection';
+                            btn.setAttribute('onclick', 'startDetection()');
                         }
 
                         function startDetection() {
@@ -702,8 +712,17 @@
                                 .then(function(r) { return r.json(); })
                                 .then(function(data) {
                                     if (data.status === 'success') {
-                                        document.getElementById('annotated-image').src = data.annotated_image_url;
-                                        document.getElementById('annotated-image-container').style.display = 'block';
+                                        // Draw annotated frame on overlay canvas (same window as webcam)
+                                        var overlay = document.getElementById('detection-overlay');
+                                        overlay.width = video.videoWidth || 640;
+                                        overlay.height = video.videoHeight || 480;
+                                        var img = new Image();
+                                        img.onload = function() {
+                                            overlay.getContext('2d').drawImage(img, 0, 0, overlay.width, overlay.height);
+                                        };
+                                        img.src = data.annotated_image_url;
+
+                                        // Update detection list
                                         var list = document.getElementById('detection-list');
                                         list.innerHTML = '';
                                         data.detected_objects.forEach(function(obj) {
