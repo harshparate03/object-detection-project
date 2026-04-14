@@ -445,7 +445,7 @@
                         //                 method: "POST",
                         //                 body: formData,
                         //                 headers: {
-                        //                     "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                        //                     "X-CSRFToken": getCsrfToken()
                         //                 },
                         //             })
                         //             .then((response) => {
@@ -539,7 +539,7 @@
                                         method: "POST",
                                         body: formData,
                                         headers: {
-                                            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                                            "X-CSRFToken": getCsrfToken()
                                         },
                                     })
                                         .then((response) => {
@@ -679,10 +679,25 @@
                         //     link.download = "screenshot.png";
                         //     link.click();
                         // }
+                        var webcamStream = null;
+
                         function openWebcam() {
-                            document.getElementById("webcam-feed").src = "/video_feed/";
-                            document.getElementById("webcam-buttons").style.display = "inline-block"; // Show all buttons
-                            document.getElementById("stop-webcam-btn").style.display = "inline-block"; // Show Stop Webcam immediately
+                            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                                navigator.mediaDevices.getUserMedia({ video: true })
+                                .then(function(stream) {
+                                    webcamStream = stream;
+                                    var webcamVideo = document.getElementById("webcam-video");
+                                    webcamVideo.srcObject = stream;
+                                    webcamVideo.style.display = "block";
+                                    document.getElementById("webcam-buttons").style.display = "inline-block";
+                                    document.getElementById("stop-webcam-btn").style.display = "inline-block";
+                                })
+                                .catch(function(err) {
+                                    alert("Cannot access webcam: " + err.message);
+                                });
+                            } else {
+                                alert("Webcam not supported in this browser.");
+                            }
                         }
 
                         function startDetection() {
@@ -704,11 +719,15 @@
                         }
 
                         function stopWebcam() {
-                            fetch('/stop_webcam/').then(response => {
-                                console.log("Webcam stopped");
-                                document.getElementById("webcam-feed").src = "";
-                                document.getElementById("webcam-buttons").style.display = "none"; // Hide all buttons after stopping
-                            });
+                            if (webcamStream) {
+                                webcamStream.getTracks().forEach(function(track) { track.stop(); });
+                                webcamStream = null;
+                            }
+                            var webcamVideo = document.getElementById("webcam-video");
+                            webcamVideo.srcObject = null;
+                            webcamVideo.style.display = "none";
+                            document.getElementById("webcam-feed").src = "";
+                            document.getElementById("webcam-buttons").style.display = "none";
                         }
 
                         function takeScreenshot() {
@@ -1189,7 +1208,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',  // Include CSRF token for Django
+                        'X-CSRFToken': getCsrfToken(),  // Include CSRF token for Django
                     },
                 })
                     .then(response => response.json())
@@ -1219,6 +1238,18 @@
     </script> -->
 
     <script>
+        function getCsrfToken() {
+            var name = 'csrftoken';
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var c = cookies[i].trim();
+                if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
+            }
+            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+            return el ? el.value : '';
+        }
+    </script>
+    <script>
         document.getElementById('image-upload').addEventListener('change', function (event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
@@ -1232,7 +1263,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value,
+                        'X-CSRFToken': getCsrfToken(),
                     },
                 })
                     .then(response => {
@@ -1415,7 +1446,7 @@
             const formData = new FormData();
             formData.append("video", videoFile);
 
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfToken = getCsrfToken();
 
             document.getElementById("ai-loader-video").style.display = "block";
 
