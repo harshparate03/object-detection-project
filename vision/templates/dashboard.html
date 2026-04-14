@@ -434,8 +434,8 @@
             document.getElementById('generate-report-video-button').style.display = 'none';
             document.getElementById('ai-loader-video').style.display = 'none';
             // Hide webcam panel
+            document.getElementById('webcam-container').style.display = 'none';
             document.getElementById('webcam-feed').src = '';
-            document.getElementById('webcam-buttons').style.display = 'none';
         }
                     </script>
 
@@ -606,21 +606,21 @@
                     </script>
 
 
-                    <div align="center">
-                        <video id="webcam-video" width="640" height="480" autoplay
-                            style="display: none; border: 1px solid black; margin-top: 20px; transform: scaleX(-1);"></video>
+                    <div id="webcam-container" style="display:none; text-align:center; margin-top:20px; position:relative; display:none;">
+                        <div style="position:relative; display:inline-block;">
+                            <video id="webcam-video" width="640" height="480" autoplay muted
+                                style="border: 2px solid white; border-radius: 10px; display:block;"></video>
+                            <canvas id="detection-overlay" width="640" height="480"
+                                style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
+                        </div>
+                        <div id="webcam-buttons" style="text-align: center; width: 100%; margin-top:10px;">
+                            <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
+                            <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start Detection</button>
+                            <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop Webcam</button>
+                        </div>
                     </div>
-
-                    <div id="webcam-buttons" style="text-align: center; width: 100%; display: none;">
-                        <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
-                        <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start
-                            Detection</button>
-                        <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop
-                            Webcam</button>
-                    </div>
-
-                    <img id="webcam-feed" src="" style="width: 100%; display: block;">
                     <canvas id="screenshot-canvas" style="display: none;"></canvas>
+                    <img id="webcam-feed" src="" style="display:none;">
 
 
                     <!-- <div id="webcam-buttons" class="button-group mt--50 text-center" style="display: none;">
@@ -709,15 +709,13 @@
 
                         function openWebcam() {
                             clearAllPanels();
-                            // Use browser getUserMedia API - works locally and on Render
                             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                                 navigator.mediaDevices.getUserMedia({ video: true })
                                 .then(function(stream) {
                                     webcamStream = stream;
                                     var webcamVideo = document.getElementById("webcam-video");
                                     webcamVideo.srcObject = stream;
-                                    webcamVideo.style.display = "block";
-                                    document.getElementById("webcam-buttons").style.display = "inline-block";
+                                    document.getElementById("webcam-container").style.display = "block";
                                 })
                                 .catch(function(err) {
                                     alert("Cannot access webcam: " + err.message);
@@ -770,8 +768,18 @@
                                     .then(r => r.json())
                                     .then(data => {
                                         if (data.status === 'success') {
-                                            document.getElementById('annotated-image').src = data.annotated_image_url;
-                                            document.getElementById('annotated-image-container').style.display = 'block';
+                                            // Draw annotated frame ON the overlay canvas (same window as webcam)
+                                            var overlay = document.getElementById("detection-overlay");
+                                            var ctx = overlay.getContext('2d');
+                                            var img = new Image();
+                                            img.onload = function() {
+                                                overlay.width = video.videoWidth || 640;
+                                                overlay.height = video.videoHeight || 480;
+                                                ctx.drawImage(img, 0, 0, overlay.width, overlay.height);
+                                            };
+                                            img.src = data.annotated_image_url;
+
+                                            // Update detection list
                                             var list = document.getElementById('detection-list');
                                             list.innerHTML = '';
                                             data.detected_objects.forEach(obj => {
@@ -781,7 +789,6 @@
                                             });
                                             document.getElementById('detection-results').style.display = 'block';
                                         }
-                                        // schedule next frame after response
                                         if (detectionInterval) setTimeout(detectFrame, 2000);
                                     })
                                     .catch(e => {
@@ -798,20 +805,27 @@
                         function stopDetection() {
                             detectionInterval = null;
                             var btn = document.getElementById("start-detection-btn");
-                            btn.innerText = "Start Detection";
-                            btn.setAttribute("onclick", "startDetection()");
+                            if (btn) {
+                                btn.innerText = "Start Detection";
+                                btn.setAttribute("onclick", "startDetection()");
+                            }
+                            // Clear overlay
+                            var overlay = document.getElementById("detection-overlay");
+                            if (overlay) overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
                         }
 
                         function stopWebcam() {
+                            stopDetection();
                             if (webcamStream) {
                                 webcamStream.getTracks().forEach(track => track.stop());
                                 webcamStream = null;
                             }
                             var webcamVideo = document.getElementById("webcam-video");
                             webcamVideo.srcObject = null;
-                            webcamVideo.style.display = "none";
-                            document.getElementById("webcam-feed").src = "";
-                            document.getElementById("webcam-buttons").style.display = "none";
+                            document.getElementById("webcam-container").style.display = "none";
+                            // clear detection overlay
+                            var overlay = document.getElementById("detection-overlay");
+                            overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
                         }
 
                         function takeScreenshot() {
@@ -820,7 +834,7 @@
                             let context = canvas.getContext("2d");
 
                             if (!videoElement || !videoElement.srcObject) {
-                                alert("Webcam not started.");
+                                alert("Please open webcam first.");
                                 return;
                             }
 
