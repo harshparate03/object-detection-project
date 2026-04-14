@@ -701,100 +701,47 @@ def upload_video(request):
         try:
             video_file = request.FILES['video']
 
-            # Save uploaded video
+            # ✅ Step 1: Save the uploaded video in /media/uploads/
             upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
             os.makedirs(upload_dir, exist_ok=True)
+
             safe_filename = video_file.name.replace(" ", "_")
             uploaded_video_path = os.path.join(upload_dir, safe_filename)
-            with open(uploaded_video_path, 'wb') as f:
+
+            with default_storage.open(uploaded_video_path, 'wb') as f:
                 for chunk in video_file.chunks():
                     f.write(chunk)
 
-            # Process video - detect once per second, reuse boxes for all frames
-            cap = cv2.VideoCapture(uploaded_video_path)
-            if not cap.isOpened():
-                return JsonResponse({'status': 'error', 'message': 'Cannot open video file'})
+            print("✅ Video uploaded successfully at:", uploaded_video_path)
 
-            frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = int(cap.get(cv2.CAP_PROP_FPS) or 25)
+            # ✅ Step 2: Process the video
+            processed_video_path = get_detector().process_video(uploaded_video_path)
+            print("✅ Processed video path:", processed_video_path)
 
-            # Resize to 640px wide for faster processing
-            scale = min(1.0, 640 / frame_width)
-            out_w = int(frame_width * scale)
-            out_h = int(frame_height * scale)
+            # ✅ Step 3: Ensure processed video exists
+            if processed_video_path and os.path.exists(processed_video_path):
+                # ✅ Move processed video to media/output-videos/
+                output_videos_dir = os.path.join(settings.MEDIA_ROOT, 'output-videos')
+                os.makedirs(output_videos_dir, exist_ok=True)
 
-            output_videos_dir = os.path.join(settings.MEDIA_ROOT, 'output-videos')
-            os.makedirs(output_videos_dir, exist_ok=True)
-            output_path = os.path.join(output_videos_dir, 'detected_' + safe_filename.replace('.mp4', '') + '.mp4')
+                final_processed_video_path = os.path.join(output_videos_dir, os.path.basename(processed_video_path))
+                os.rename(processed_video_path, final_processed_video_path)  # Move the file
 
-            # Try H.264 first (browser compatible), fallback to mp4v
-            fourcc = cv2.VideoWriter_fourcc(*'avc1')
-            writer = cv2.VideoWriter(output_path, fourcc, fps, (out_w, out_h))
-            if not writer.isOpened():
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                writer = cv2.VideoWriter(output_path, fourcc, fps, (out_w, out_h))
-
-            # Call Roboflow twice per second for better accuracy
-            detect_every = max(1, fps // 2)
-            frame_count = 0
-            last_preds = []
-            import base64
-
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                frame_count += 1
-
-                # Resize frame
-                if scale < 1.0:
-                    frame = cv2.resize(frame, (out_w, out_h))
-
-                if frame_count % detect_every == 1:
-                    # Detect on this frame - high quality for better accuracy
-                    _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 95])
-                    b64 = base64.b64encode(buf).decode('utf-8')
-                    try:
-                        resp = http_requests.post(
-                            f"https://detect.roboflow.com/{ROBOFLOW_MODEL}",
-                            params={"api_key": ROBOFLOW_API_KEY, "confidence": 25, "overlap": 50},
-                            data=b64,
-                            headers={"Content-Type": "application/x-www-form-urlencoded"},
-                            timeout=10
-                        )
-                        last_preds = resp.json().get('predictions', [])
-                    except Exception:
-                        last_preds = []
-
-                # Draw last known boxes on every frame
-                annotated = frame.copy()
-                for pred in last_preds:
-                    label = pred['class']
-                    conf = pred['confidence']
-                    x, y, w, h = int(pred['x']*scale), int(pred['y']*scale), int(pred['width']*scale), int(pred['height']*scale)
-                    x1, y1 = max(0, x - w//2), max(0, y - h//2)
-                    x2, y2 = min(out_w, x + w//2), min(out_h, y + h//2)
-                    cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(annotated, f"{label} {conf:.0%}", (x1, max(0,y1-5)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-                writer.write(annotated)
-
-            cap.release()
-            writer.release()
-
-            if os.path.exists(output_path):
+                # ✅ Generate the correct video URL
                 processed_video_url = request.build_absolute_uri(
-                    settings.MEDIA_URL + 'output-videos/' + urllib.parse.quote(os.path.basename(output_path))
+                    settings.MEDIA_URL + 'output-videos/' + urllib.parse.quote(os.path.basename(final_processed_video_path))
                 )
+
+                print("✅ Processed Video URL:", processed_video_url)
                 return JsonResponse({'status': 'success', 'processed_video_url': processed_video_url})
+
             else:
-                return JsonResponse({'status': 'error', 'message': 'Failed to save processed video'})
+                print("❌ Error: Processed video path is None or does not exist")
+                return JsonResponse({'status': 'error', 'message': 'Failed to process video'})
 
         except Exception as e:
-            import traceback
-            return JsonResponse({'status': 'error', 'message': f'Error: {str(e)}', 'detail': traceback.format_exc()})
+            print("❌ Exception:", str(e))
+            return JsonResponse({'status': 'error', 'message': f'Error: {str(e)}'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
