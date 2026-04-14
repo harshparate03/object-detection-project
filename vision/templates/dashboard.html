@@ -413,22 +413,7 @@
 
                     </div>
                     <script>
-                        // function clearAllPanels() {
-            try { document.getElementById('annotated-image-container').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('annotated-image').src = ''; } catch(e) {}
-            try { document.getElementById('detection-results').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('detection-list').innerHTML = ''; } catch(e) {}
-            try { document.getElementById('generate-report-button').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('ai-loader').style.display = 'none'; } catch(e) {}
-            try { var v = document.getElementById('annotated-video'); v.pause(); document.getElementById('video-source').src = ''; v.load(); } catch(e) {}
-            try { document.getElementById('annotated-video-container').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('detection-results-video').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('video-detection-list').innerHTML = ''; } catch(e) {}
-            try { document.getElementById('generate-report-video-button').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('ai-loader-video').style.display = 'none'; } catch(e) {}
-            try { document.getElementById('webcam-feed').src = ''; } catch(e) {}
-            try { document.getElementById('webcam-buttons').style.display = 'none'; } catch(e) {}
-        }
+                        // placeholder - real handleImageUpload is defined below
                     </script>
 
                     <!-- handle video upload -->
@@ -544,7 +529,6 @@
                                 const file = input.files[0];
 
                                 if (file && file.type.startsWith("video/")) {
-                                    clearAllPanels();
                                     const formData = new FormData();
                                     formData.append("video", file);
 
@@ -698,7 +682,6 @@
                         //     link.click();
                         // }
                         function openWebcam() {
-                            clearAllPanels();
                             document.getElementById("webcam-feed").src = "/video_feed/";
                             document.getElementById("webcam-buttons").style.display = "inline-block";
                             document.getElementById("stop-webcam-btn").style.display = "inline-block";
@@ -1252,7 +1235,6 @@
         document.getElementById('image-upload').addEventListener('change', function (event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
-                clearAllPanels();
                 const formData = new FormData();
                 formData.append('image', file);
 
