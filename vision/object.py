@@ -4,7 +4,6 @@ import time
 import logging
 import cv2
 import numpy as np
-import torch
 from pathlib import Path
 from typing import Dict, Tuple, List, Optional, Union
 from urllib.request import urlretrieve
@@ -72,6 +71,7 @@ class YOLODetector:
         
         # Auto-detect device if not specified
         if device is None:
+            import torch
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         else:
             self.device = device
