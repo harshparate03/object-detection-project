@@ -480,46 +480,31 @@ logger = logging.getLogger(__name__)
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
         try:
-            # Save the uploaded image temporarily
             uploaded_file = request.FILES['image']
             file_name = default_storage.save(uploaded_file.name, ContentFile(uploaded_file.read()))
             file_path = default_storage.path(file_name)
 
-            # Check if the file is saved correctly
             logger.info(f"Image saved at: {file_path}")
 
-            # Process the image using YOLO
             detector = get_detector()
             image = cv2.imread(file_path)
 
             if image is None:
-                logger.error("Failed to load image with OpenCV.")
                 return JsonResponse({'status': 'error', 'message': 'Failed to read image'}, status=400)
 
-            # Detect objects and get the annotated image + detections
             annotated_image, detections = detector.process_frame(image)
 
             if annotated_image is None:
-                logger.error("YOLO failed to process the image.")
                 return JsonResponse({'status': 'error', 'message': 'YOLO processing error'}, status=400)
 
-
-
-
             output_name = f"annotated_{uploaded_file.name}"
-            output_path = default_storage.save(output_name, ContentFile(cv2.imencode('.jpg', annotated_image)[1].tobytes()))
-            annotated_image_url = default_storage.url(output_name)
+            default_storage.save(output_name, ContentFile(cv2.imencode('.jpg', annotated_image)[1].tobytes()))
+            annotated_image_url = request.build_absolute_uri(settings.MEDIA_URL + output_name)
 
             detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
-            # Get the URL of the annotated image
 
-            annotated_image_url = default_storage.url(f"annotated_{uploaded_file.name}")
-            print("===============",annotated_image_url)
-            # Convert detections dictionary to a list
-            detected_objects = [{"label": label, "count": count} for label, count in detections.items()]
-            print("-----------------",detect_objects)
-
-               # Save to UploadHistory
+            from .models import UploadHistory
+            from django.utils.timezone import now
             UploadHistory.objects.create(
                 user=request.user,
                 image=output_name,
@@ -529,7 +514,7 @@ def upload_image(request):
             return JsonResponse({
                 'status': 'success',
                 'annotated_image_url': annotated_image_url,
-                'detected_objects': detected_objects  # Send detected objects list
+                'detected_objects': detected_objects
             })
 
         except Exception as e:
