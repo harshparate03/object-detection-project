@@ -389,10 +389,10 @@
                         </div>
 
                         <!-- Placeholder for Annotated Video -->
-                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px;">
+                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px; width: 100%;">
                             <button onclick="closeVideoPanel()" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">✕</button>
                             <h4>Processed Video:</h4>
-                            <video id="annotated-video" controls style="max-width: 100%; height: auto; border: 2px solid white; border-radius: 10px;">
+                            <video id="annotated-video" controls style="width: 80%; max-width: 900px; height: auto; border: 2px solid white; border-radius: 10px;">
                                 <source id="video-source" src="">
                                 Your browser does not support the video tag.
                             </video>
@@ -580,13 +580,10 @@
                                             if (data.status === "success") {
                                                 console.log("✅ Processed Video URL::", data.processed_video_url);
 
-                                                // ✅ Correctly set the video source
+                                                // Set video source and show container
+                                                processedVideoContainer.style.display = "block";
                                                 videoSource.src = data.processed_video_url;
                                                 processedVideo.load();
-                                                processedVideo.play().catch(error => console.error("Play error:", error));
-
-                                                processedVideoContainer.style.display = "block"; // ✅ Show video container
-                                                processedVideo.style.display = "block"; // ✅ Ensure video is visible
 
                                             } else {
                                                 alert("Error processing the video: " + data.message, "error");
@@ -1554,10 +1551,9 @@
                 let videoUrl = data.processed_video_url.trim();
                 let videoElement = document.getElementById("annotated-video");
                 let sourceElement = document.getElementById("video-source");
+                document.getElementById("annotated-video-container").style.display = "block";
                 sourceElement.src = videoUrl;
                 videoElement.load();
-                videoElement.play().catch(e => console.error("Play error:", e));
-                document.getElementById("annotated-video-container").style.display = "block";
             })
             .catch(error => {
                 document.getElementById("ai-loader-video").style.display = "none";
