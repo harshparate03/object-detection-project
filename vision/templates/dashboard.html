@@ -638,6 +638,7 @@
                     <script>
                         var webcamStream = null;
                         var detectionActive = false;
+                        var detectionTimer = null;
 
                         function getCsrfToken() {
                             var name = 'csrftoken';
@@ -658,10 +659,11 @@
                             navigator.mediaDevices.getUserMedia({ video: true })
                             .then(function(stream) {
                                 webcamStream = stream;
-                                var webcamVideo = document.getElementById('webcam-video');
-                                webcamVideo.srcObject = stream;
-                                webcamVideo.style.display = 'block';
-                                document.getElementById('detection-overlay').style.display = 'block';
+                                var video = document.getElementById('webcam-video');
+                                video.srcObject = stream;
+                                video.style.display = 'block';
+                                // Keep overlay hidden until detection starts
+                                document.getElementById('detection-overlay').style.display = 'none';
                                 document.getElementById('webcam-buttons').style.display = 'inline-block';
                             })
                             .catch(function(err) {
@@ -670,21 +672,18 @@
                         }
 
                         function stopWebcam() {
-                            detectionActive = false;
+                            // Stop detection first
+                            stopDetection();
+                            // Stop camera stream
                             if (webcamStream) {
-                                webcamStream.getTracks().forEach(function(track) { track.stop(); });
+                                webcamStream.getTracks().forEach(function(t) { t.stop(); });
                                 webcamStream = null;
                             }
-                            var v = document.getElementById('webcam-video');
-                            if (v) { v.srcObject = null; v.style.display = 'none'; }
-                            var overlay = document.getElementById('detection-overlay');
-                            if (overlay) { overlay.style.display = 'none'; overlay.getContext('2d').clearRect(0,0,overlay.width,overlay.height); }
-                            document.getElementById('webcam-feed').src = '';
+                            var video = document.getElementById('webcam-video');
+                            video.srcObject = null;
+                            video.style.display = 'none';
                             document.getElementById('webcam-buttons').style.display = 'none';
-                            document.getElementById('detection-results').style.display = 'none';
-                            var btn = document.getElementById('start-detection-btn');
-                            btn.innerText = 'Start Detection';
-                            btn.setAttribute('onclick', 'startDetection()');
+                            document.getElementById('webcam-feed').src = '';
                         }
 
                         function startDetection() {
@@ -693,40 +692,62 @@
                                 alert('Please open webcam first.');
                                 return;
                             }
-                            if (detectionActive) return; // already running
+                            if (detectionActive) return;
                             detectionActive = true;
+
+                            // Show overlay canvas on top of webcam
+                            var overlay = document.getElementById('detection-overlay');
+                            overlay.width = video.videoWidth || 640;
+                            overlay.height = video.videoHeight || 480;
+                            overlay.style.display = 'block';
+
+                            // Update button
                             var btn = document.getElementById('start-detection-btn');
                             btn.innerText = 'Stop Detection';
                             btn.setAttribute('onclick', 'stopDetection()');
+
+                            // Start detection loop
                             runDetection(video);
                         }
 
                         function stopDetection() {
                             detectionActive = false;
+
+                            // Cancel any pending timer
+                            if (detectionTimer) {
+                                clearTimeout(detectionTimer);
+                                detectionTimer = null;
+                            }
+
+                            // Hide overlay completely
+                            var overlay = document.getElementById('detection-overlay');
+                            if (overlay) {
+                                overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                                overlay.style.display = 'none';
+                            }
+
+                            // Hide detection results
+                            var wr = document.getElementById('webcam-detection-results');
+                            if (wr) wr.style.display = 'none';
+
                             // Reset button
                             var btn = document.getElementById('start-detection-btn');
                             if (btn) {
                                 btn.innerText = 'Start Detection';
                                 btn.setAttribute('onclick', 'startDetection()');
                             }
-                            // Hide and clear overlay canvas completely
-                            var overlay = document.getElementById('detection-overlay');
-                            if (overlay) {
-                                overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
-                                overlay.style.display = 'none';
-                            }
-                            // Hide detection results
-                            var wr = document.getElementById('webcam-detection-results');
-                            if (wr) wr.style.display = 'none';
                         }
 
                         function runDetection(video) {
                             if (!detectionActive) return;
+
                             var canvas = document.createElement('canvas');
                             canvas.width = video.videoWidth || 640;
                             canvas.height = video.videoHeight || 480;
                             canvas.getContext('2d').drawImage(video, 0, 0);
+
                             canvas.toBlob(function(blob) {
+                                if (!detectionActive) return; // check again after async
                                 var formData = new FormData();
                                 formData.append('image', blob, 'frame.jpg');
                                 fetch("{% url 'upload_image' %}", {
@@ -736,18 +757,19 @@
                                 })
                                 .then(function(r) { return r.json(); })
                                 .then(function(data) {
+                                    if (!detectionActive) return;
                                     if (data.status === 'success') {
-                                        // Draw annotated frame on overlay canvas (same window as webcam)
+                                        // Draw annotated frame on overlay
                                         var overlay = document.getElementById('detection-overlay');
-                                        overlay.width = video.videoWidth || 640;
-                                        overlay.height = video.videoHeight || 480;
                                         var img = new Image();
                                         img.onload = function() {
-                                            overlay.getContext('2d').drawImage(img, 0, 0, overlay.width, overlay.height);
+                                            if (detectionActive && overlay) {
+                                                overlay.getContext('2d').drawImage(img, 0, 0, overlay.width, overlay.height);
+                                            }
                                         };
                                         img.src = data.annotated_image_url;
 
-                                        // Update webcam detection list (centered below webcam)
+                                        // Show detected objects below webcam
                                         var list = document.getElementById('webcam-detection-list');
                                         list.innerHTML = '';
                                         data.detected_objects.forEach(function(obj) {
@@ -757,32 +779,29 @@
                                         });
                                         document.getElementById('webcam-detection-results').style.display = 'block';
                                     }
-                                    if (detectionActive) setTimeout(function() { runDetection(video); }, 2000);
+                                    // Schedule next detection
+                                    if (detectionActive) {
+                                        detectionTimer = setTimeout(function() { runDetection(video); }, 2000);
+                                    }
                                 })
                                 .catch(function() {
-                                    if (detectionActive) setTimeout(function() { runDetection(video); }, 2000);
+                                    if (detectionActive) {
+                                        detectionTimer = setTimeout(function() { runDetection(video); }, 2000);
+                                    }
                                 });
                             }, 'image/jpeg', 0.8);
                         }
 
-                        function stopDetection() {
-                            detectionActive = false;
-                            var btn = document.getElementById('start-detection-btn');
-                            btn.innerText = 'Start Detection';
-                            btn.setAttribute('onclick', 'startDetection()');
-                        }
-
                         function takeScreenshot() {
-                            var videoElement = document.getElementById('webcam-video');
-                            if (!videoElement || !videoElement.srcObject) {
+                            var video = document.getElementById('webcam-video');
+                            if (!video || !video.srcObject) {
                                 alert('Please open webcam first.');
                                 return;
                             }
                             var canvas = document.getElementById('screenshot-canvas');
-                            var context = canvas.getContext('2d');
-                            canvas.width = videoElement.videoWidth || 640;
-                            canvas.height = videoElement.videoHeight || 480;
-                            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
                             canvas.toBlob(function(blob) {
                                 var link = document.createElement('a');
                                 link.href = URL.createObjectURL(blob);
