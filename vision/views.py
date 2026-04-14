@@ -558,25 +558,6 @@ def upload_image(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-            from .models import UploadHistory
-            from django.utils.timezone import now
-            UploadHistory.objects.create(
-                user=request.user,
-                image=output_name,
-                detected_objects=str(detected_objects),
-                uploaded_at=now()
-            )
-            return JsonResponse({
-                'status': 'success',
-                'annotated_image_url': annotated_image_url,
-                'detected_objects': detected_objects
-            })
-        except Exception as e:
-            logger.exception("Error processing image")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
-
 
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
