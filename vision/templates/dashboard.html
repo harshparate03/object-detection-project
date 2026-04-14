@@ -389,8 +389,10 @@
                         </div>
 
                         <!-- Placeholder for Annotated Video -->
-                        <div id="annotated-video-container" style="display: none;">
-                            <video id="annotated-video" controls>
+                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px;">
+                            <button onclick="closeVideoPanel()" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">✕</button>
+                            <h4>Processed Video:</h4>
+                            <video id="annotated-video" controls style="max-width: 100%; height: auto; border: 2px solid white; border-radius: 10px;">
                                 <source id="video-source" src="">
                                 Your browser does not support the video tag.
                             </video>
@@ -511,19 +513,19 @@
                         // });
 
                         document.addEventListener("DOMContentLoaded", function () {
-                            const videoUploadInput = document.getElementById("video-upload-input");
-                            const aiLoader = document.getElementById("ai-loader-video");
-                            const processedVideoContainer = document.getElementById("annotated-video-container");
-                            const processedVideo = document.getElementById("annotated-video");
-                            const videoSource = document.getElementById("video-source");
-                            const detectionsList = document.getElementById("video-detection-list");
-                            const reportButton = document.getElementById("generate-report-video-button");
+            const videoUploadInput = document.getElementById("video-upload-input");
+            const aiLoader = document.getElementById("ai-loader-video");
+            const processedVideoContainer = document.getElementById("annotated-video-container");
+            const processedVideo = document.getElementById("annotated-video");
+            const videoSource = document.getElementById("video-source");
+            const detectionsList = document.getElementById("video-detection-list");
+            const reportButton = document.getElementById("generate-report-video-button");
 
-                            videoUploadInput.addEventListener("change", function () {
-                                handleVideoUpload(this);
-                            });
+            videoUploadInput.addEventListener("change", function () {
+                handleVideoUpload(this);
+            });
 
-                            function handleVideoUpload(input) {
+            function handleVideoUpload(input) {
                                 const file = input.files[0];
 
                                 if (file && file.type.startsWith("video/")) {
@@ -681,8 +683,19 @@
                         // }
                         function openWebcam() {
                             document.getElementById("webcam-feed").src = "/video_feed/";
-                            document.getElementById("webcam-buttons").style.display = "inline-block"; // Show all buttons
-                            document.getElementById("stop-webcam-btn").style.display = "inline-block"; // Show Stop Webcam immediately
+                            document.getElementById("webcam-buttons").style.display = "inline-block";
+                            document.getElementById("stop-webcam-btn").style.display = "inline-block";
+                        }
+
+                        function closeVideoPanel() {
+                            const vc = document.getElementById('annotated-video-container');
+                            const v = document.getElementById('annotated-video');
+                            v.pause();
+                            document.getElementById('video-source').src = '';
+                            v.load();
+                            vc.style.display = 'none';
+                            document.getElementById('detection-results-video').style.display = 'none';
+                            document.getElementById('generate-report-video-button').style.display = 'none';
                         }
 
                         function startDetection() {
@@ -1252,6 +1265,11 @@
                             return;
                         }
                         if (data.status === 'success') {
+                            // Hide video panel when new image is uploaded
+                            document.getElementById('annotated-video-container').style.display = 'none';
+                            document.getElementById('detection-results-video').style.display = 'none';
+                            document.getElementById('generate-report-video-button').style.display = 'none';
+
                             // Show the processed image
                             document.getElementById('annotated-image').src = data.annotated_image_url;
                             document.getElementById('annotated-image-container').style.display = 'block';
@@ -1436,6 +1454,11 @@
 
                     let videoUrl = data.processed_video_url.trim();
                     console.log("✅ Processed Video URL:", videoUrl);
+
+                    // Hide image panel when video is shown
+                    document.getElementById('annotated-image-container').style.display = 'none';
+                    document.getElementById('detection-results').style.display = 'none';
+                    document.getElementById('generate-report-button').style.display = 'none';
 
                     let videoElement = document.getElementById("annotated-video");
                     let sourceElement = document.getElementById("video-source");
