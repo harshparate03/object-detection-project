@@ -480,7 +480,7 @@ import requests as http_requests
 logger = logging.getLogger(__name__)
 
 ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY", "8oe91GceFQVvYXU9IjB8")
-ROBOFLOW_MODEL = "coco/9"  # YOLOv5 COCO - most reliable public model
+ROBOFLOW_MODEL = "coco/17"  # Latest COCO YOLOv8 model
 
 COLORS = [
     (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0),
@@ -501,6 +501,8 @@ def detect_with_roboflow(image):
     )
     response.raise_for_status()
     result = response.json()
+    logger.info(f"Roboflow response: {result}")
+    print(f"Roboflow predictions: {result.get('predictions', [])}")
 
     detections = {}
     annotated = image.copy()
