@@ -328,7 +328,7 @@
                                 <!-- Image Upload Button -->
                                 <form id="image-upload-form" enctype="multipart/form-data">
                                     <input type="file" id="image-upload" name="image" accept="image/*"
-                                        style="display: none;" onchange="handleImageUpload(this)" />
+                                        style="display: none;" />
                                     <button type="button" class="btn-default btn-large"
                                         onclick="document.getElementById('image-upload').click();">
                                         Upload Image
@@ -1257,6 +1257,9 @@
                             } else {
                                 document.getElementById('detection-results').style.display = 'none';
                             }
+
+                            // Show generate report button
+                            document.getElementById('generate-report-button').style.display = 'inline-block';
 
                         } else {
                             alert('Error: ' + data.message);
