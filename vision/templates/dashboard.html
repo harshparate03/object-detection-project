@@ -413,8 +413,29 @@
 
                     </div>
                     <script>
-                        // placeholder - real handleImageUpload is defined below
-                    </script>
+                        // Helper: clear all result panels
+        function clearAllPanels() {
+            // Image panel
+            document.getElementById('annotated-image-container').style.display = 'none';
+            document.getElementById('annotated-image').src = '';
+            document.getElementById('detection-results').style.display = 'none';
+            document.getElementById('detection-list').innerHTML = '';
+            document.getElementById('generate-report-button').style.display = 'none';
+            // Video panel
+            const v = document.getElementById('annotated-video');
+            v.pause();
+            document.getElementById('video-source').src = '';
+            v.load();
+            document.getElementById('annotated-video-container').style.display = 'none';
+            document.getElementById('detection-results-video').style.display = 'none';
+            document.getElementById('video-detection-list').innerHTML = '';
+            document.getElementById('generate-report-video-button').style.display = 'none';
+            // Webcam panel
+            document.getElementById('webcam-feed').src = '';
+            document.getElementById('webcam-buttons').style.display = 'none';
+            document.getElementById('ai-loader').style.display = 'none';
+            document.getElementById('ai-loader-video').style.display = 'none';
+        }
 
                     <!-- handle video upload -->
                     <script>
@@ -527,8 +548,8 @@
 
             function handleVideoUpload(input) {
                                 const file = input.files[0];
-
                                 if (file && file.type.startsWith("video/")) {
+                                    clearAllPanels();
                                     const formData = new FormData();
                                     formData.append("video", file);
 
@@ -682,6 +703,7 @@
                         //     link.click();
                         // }
                         function openWebcam() {
+                            clearAllPanels();
                             document.getElementById("webcam-feed").src = "/video_feed/";
                             document.getElementById("webcam-buttons").style.display = "inline-block";
                             document.getElementById("stop-webcam-btn").style.display = "inline-block";
@@ -1235,6 +1257,7 @@
         document.getElementById('image-upload').addEventListener('change', function (event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
+                clearAllPanels();
                 const formData = new FormData();
                 formData.append('image', file);
 
@@ -1265,11 +1288,6 @@
                             return;
                         }
                         if (data.status === 'success') {
-                            // Hide video panel when new image is uploaded
-                            document.getElementById('annotated-video-container').style.display = 'none';
-                            document.getElementById('detection-results-video').style.display = 'none';
-                            document.getElementById('generate-report-video-button').style.display = 'none';
-
                             // Show the processed image
                             document.getElementById('annotated-image').src = data.annotated_image_url;
                             document.getElementById('annotated-image-container').style.display = 'block';
@@ -1454,11 +1472,6 @@
 
                     let videoUrl = data.processed_video_url.trim();
                     console.log("✅ Processed Video URL:", videoUrl);
-
-                    // Hide image panel when video is shown
-                    document.getElementById('annotated-image-container').style.display = 'none';
-                    document.getElementById('detection-results').style.display = 'none';
-                    document.getElementById('generate-report-button').style.display = 'none';
 
                     let videoElement = document.getElementById("annotated-video");
                     let sourceElement = document.getElementById("video-source");
