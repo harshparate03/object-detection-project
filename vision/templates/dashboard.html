@@ -414,23 +414,20 @@
                     </div>
                     <script>
                         // function clearAllPanels() {
-            document.getElementById('annotated-image-container').style.display = 'none';
-            document.getElementById('annotated-image').src = '';
-            document.getElementById('detection-results').style.display = 'none';
-            document.getElementById('detection-list').innerHTML = '';
-            document.getElementById('generate-report-button').style.display = 'none';
-            document.getElementById('ai-loader').style.display = 'none';
-            var v = document.getElementById('annotated-video');
-            v.pause();
-            document.getElementById('video-source').src = '';
-            v.load();
-            document.getElementById('annotated-video-container').style.display = 'none';
-            document.getElementById('detection-results-video').style.display = 'none';
-            document.getElementById('video-detection-list').innerHTML = '';
-            document.getElementById('generate-report-video-button').style.display = 'none';
-            document.getElementById('ai-loader-video').style.display = 'none';
-            document.getElementById('webcam-feed').src = '';
-            document.getElementById('webcam-buttons').style.display = 'none';
+            try { document.getElementById('annotated-image-container').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('annotated-image').src = ''; } catch(e) {}
+            try { document.getElementById('detection-results').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('detection-list').innerHTML = ''; } catch(e) {}
+            try { document.getElementById('generate-report-button').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('ai-loader').style.display = 'none'; } catch(e) {}
+            try { var v = document.getElementById('annotated-video'); v.pause(); document.getElementById('video-source').src = ''; v.load(); } catch(e) {}
+            try { document.getElementById('annotated-video-container').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('detection-results-video').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('video-detection-list').innerHTML = ''; } catch(e) {}
+            try { document.getElementById('generate-report-video-button').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('ai-loader-video').style.display = 'none'; } catch(e) {}
+            try { document.getElementById('webcam-feed').src = ''; } catch(e) {}
+            try { document.getElementById('webcam-buttons').style.display = 'none'; } catch(e) {}
         }
                     </script>
 
