@@ -495,7 +495,7 @@ def detect_with_roboflow(image):
 
     response = http_requests.post(
         f"https://detect.roboflow.com/{ROBOFLOW_MODEL}",
-        params={"api_key": ROBOFLOW_API_KEY, "confidence": 25, "overlap": 45},
+        params={"api_key": ROBOFLOW_API_KEY, "confidence": 40, "overlap": 30},
         data=img_base64,
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
