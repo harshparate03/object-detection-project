@@ -523,7 +523,7 @@ def upload_image(request):
 
         except Exception as e:
             logger.exception("Unexpected error while processing the image.")
-            return JsonResponse({'status': 'error', 'message': f'Error: {str(e)}'}, status=500)
+            return JsonResponse({'status': 'error', 'message': f'Error: {str(e)}', 'traceback': __import__("traceback").format_exc()}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
