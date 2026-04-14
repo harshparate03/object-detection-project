@@ -389,10 +389,8 @@
                         </div>
 
                         <!-- Placeholder for Annotated Video -->
-                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px; width: 100%;">
-                            <button onclick="closeVideoPanel()" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">✕</button>
-                            <h4>Processed Video:</h4>
-                            <video id="annotated-video" controls style="width: 80%; max-width: 900px; height: auto; border: 2px solid white; border-radius: 10px;">
+                        <div id="annotated-video-container" style="display: none;">
+                            <video id="annotated-video" controls>
                                 <source id="video-source" src="">
                                 Your browser does not support the video tag.
                             </video>
@@ -413,45 +411,7 @@
 
                     </div>
                     <script>
-                        function getCsrfToken() {
-            // Read CSRF token from cookie - works always
-            var name = 'csrftoken';
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var c = cookies[i].trim();
-                if (c.startsWith(name + '=')) {
-                    return decodeURIComponent(c.substring(name.length + 1));
-                }
-            }
-            // Fallback: read from form
-            var el = document.querySelector('[name=csrfmiddlewaretoken]');
-            return el ? el.value : '';
-        }
-
-        function clearAllPanels() {
-            // Hide image panel
-            document.getElementById('annotated-image-container').style.display = 'none';
-            document.getElementById('annotated-image').src = '';
-            document.getElementById('detection-results').style.display = 'none';
-            document.getElementById('detection-list').innerHTML = '';
-            document.getElementById('generate-report-button').style.display = 'none';
-            document.getElementById('ai-loader').style.display = 'none';
-            // Hide video panel
-            try {
-                var v = document.getElementById('annotated-video');
-                v.pause();
-                document.getElementById('video-source').src = '';
-                v.load();
-            } catch(e) {}
-            document.getElementById('annotated-video-container').style.display = 'none';
-            document.getElementById('detection-results-video').style.display = 'none';
-            document.getElementById('video-detection-list').innerHTML = '';
-            document.getElementById('generate-report-video-button').style.display = 'none';
-            document.getElementById('ai-loader-video').style.display = 'none';
-            // Hide webcam panel
-            document.getElementById('webcam-container').style.display = 'none';
-            document.getElementById('webcam-feed').src = '';
-        }
+                        // placeholder - real handleImageUpload is defined below
                     </script>
 
                     <!-- handle video upload -->
@@ -485,7 +445,7 @@
                         //                 method: "POST",
                         //                 body: formData,
                         //                 headers: {
-                        //                     "X-CSRFToken": getCsrfToken()
+                        //                     "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
                         //                 },
                         //             })
                         //             .then((response) => {
@@ -551,23 +511,22 @@
                         // });
 
                         document.addEventListener("DOMContentLoaded", function () {
-            const videoUploadInput = document.getElementById("video-upload-input");
-            const aiLoader = document.getElementById("ai-loader-video");
-            const processedVideoContainer = document.getElementById("annotated-video-container");
-            const processedVideo = document.getElementById("annotated-video");
-            const videoSource = document.getElementById("video-source");
-            const detectionsList = document.getElementById("video-detection-list");
-            const reportButton = document.getElementById("generate-report-video-button");
+                            const videoUploadInput = document.getElementById("video-upload-input");
+                            const aiLoader = document.getElementById("ai-loader-video");
+                            const processedVideoContainer = document.getElementById("annotated-video-container");
+                            const processedVideo = document.getElementById("annotated-video");
+                            const videoSource = document.getElementById("video-source");
+                            const detectionsList = document.getElementById("video-detection-list");
+                            const reportButton = document.getElementById("generate-report-video-button");
 
-            videoUploadInput.addEventListener("change", function () {
-                handleVideoUpload(this);
-            });
+                            videoUploadInput.addEventListener("change", function () {
+                                handleVideoUpload(this);
+                            });
 
-            function handleVideoUpload(input) {
+                            function handleVideoUpload(input) {
                                 const file = input.files[0];
 
                                 if (file && file.type.startsWith("video/")) {
-                                    clearAllPanels();
                                     const formData = new FormData();
                                     formData.append("video", file);
 
@@ -580,7 +539,7 @@
                                         method: "POST",
                                         body: formData,
                                         headers: {
-                                            "X-CSRFToken": getCsrfToken()
+                                            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
                                         },
                                     })
                                         .then((response) => {
@@ -595,10 +554,13 @@
                                             if (data.status === "success") {
                                                 console.log("✅ Processed Video URL::", data.processed_video_url);
 
-                                                // Set video source and show container
-                                                processedVideoContainer.style.display = "block";
+                                                // ✅ Correctly set the video source
                                                 videoSource.src = data.processed_video_url;
                                                 processedVideo.load();
+                                                processedVideo.play().catch(error => console.error("Play error:", error));
+
+                                                processedVideoContainer.style.display = "block"; // ✅ Show video container
+                                                processedVideo.style.display = "block"; // ✅ Ensure video is visible
 
                                             } else {
                                                 alert("Error processing the video: " + data.message, "error");
@@ -618,21 +580,21 @@
                     </script>
 
 
-                    <div id="webcam-container" style="display:none; text-align:center; margin-top:20px; position:relative; display:none;">
-                        <div style="position:relative; display:inline-block;">
-                            <video id="webcam-video" width="640" height="480" autoplay muted
-                                style="border: 2px solid white; border-radius: 10px; display:block;"></video>
-                            <canvas id="detection-overlay" width="640" height="480"
-                                style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
-                        </div>
-                        <div id="webcam-buttons" style="text-align: center; width: 100%; margin-top:10px;">
-                            <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
-                            <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start Detection</button>
-                            <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop Webcam</button>
-                        </div>
+                    <div align="center">
+                        <video id="webcam-video" width="640" height="480" autoplay
+                            style="display: none; border: 1px solid black; margin-top: 20px; transform: scaleX(-1);"></video>
                     </div>
+
+                    <div id="webcam-buttons" style="text-align: center; width: 100%; display: none;">
+                        <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
+                        <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start
+                            Detection</button>
+                        <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop
+                            Webcam</button>
+                    </div>
+
+                    <img id="webcam-feed" src="" style="width: 100%; display: block;">
                     <canvas id="screenshot-canvas" style="display: none;"></canvas>
-                    <img id="webcam-feed" src="" style="display:none;">
 
 
                     <!-- <div id="webcam-buttons" class="button-group mt--50 text-center" style="display: none;">
@@ -717,136 +679,45 @@
                         //     link.download = "screenshot.png";
                         //     link.click();
                         // }
-                        var webcamStream = null;
-
                         function openWebcam() {
-                            clearAllPanels();
-                            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                                navigator.mediaDevices.getUserMedia({ video: true })
-                                .then(function(stream) {
-                                    webcamStream = stream;
-                                    var webcamVideo = document.getElementById("webcam-video");
-                                    webcamVideo.srcObject = stream;
-                                    document.getElementById("webcam-container").style.display = "block";
-                                })
-                                .catch(function(err) {
-                                    alert("Cannot access webcam: " + err.message);
-                                });
-                            } else {
-                                alert("Webcam not supported in this browser.");
-                            }
+                            document.getElementById("webcam-feed").src = "/video_feed/";
+                            document.getElementById("webcam-buttons").style.display = "inline-block"; // Show all buttons
+                            document.getElementById("stop-webcam-btn").style.display = "inline-block"; // Show Stop Webcam immediately
                         }
-
-                        function closeVideoPanel() {
-                            const vc = document.getElementById('annotated-video-container');
-                            const v = document.getElementById('annotated-video');
-                            v.pause();
-                            document.getElementById('video-source').src = '';
-                            v.load();
-                            vc.style.display = 'none';
-                            document.getElementById('detection-results-video').style.display = 'none';
-                            document.getElementById('generate-report-video-button').style.display = 'none';
-                        }
-
-                        var detectionInterval = null;
 
                         function startDetection() {
-                            var video = document.getElementById("webcam-video");
-                            if (!video || !video.srcObject) {
-                                alert("Please open webcam first.");
-                                return;
-                            }
-                            var btn = document.getElementById("start-detection-btn");
-                            btn.innerText = "Stop Detection";
-                            btn.setAttribute("onclick", "stopDetection()");
-
-                            function detectFrame() {
-                                if (!detectionInterval) return;
-                                var canvas = document.createElement('canvas');
-                                canvas.width = video.videoWidth || 640;
-                                canvas.height = video.videoHeight || 480;
-                                canvas.getContext('2d').drawImage(video, 0, 0);
-
-                                canvas.toBlob(function(blob) {
-                                    var formData = new FormData();
-                                    formData.append('image', blob, 'webcam_frame.jpg');
-                                    fetch("{% url 'upload_image' %}", {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': getCsrfToken()
-                                        },
-                                        body: formData
-                                    })
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if (data.status === 'success') {
-                                            // Draw annotated frame ON the overlay canvas (same window as webcam)
-                                            var overlay = document.getElementById("detection-overlay");
-                                            var ctx = overlay.getContext('2d');
-                                            var img = new Image();
-                                            img.onload = function() {
-                                                overlay.width = video.videoWidth || 640;
-                                                overlay.height = video.videoHeight || 480;
-                                                ctx.drawImage(img, 0, 0, overlay.width, overlay.height);
-                                            };
-                                            img.src = data.annotated_image_url;
-
-                                            // Update detection list
-                                            var list = document.getElementById('detection-list');
-                                            list.innerHTML = '';
-                                            data.detected_objects.forEach(obj => {
-                                                var li = document.createElement('li');
-                                                li.textContent = obj.label + ': ' + obj.count;
-                                                list.appendChild(li);
-                                            });
-                                            document.getElementById('detection-results').style.display = 'block';
-                                        }
-                                        if (detectionInterval) setTimeout(detectFrame, 2000);
-                                    })
-                                    .catch(e => {
-                                        console.error('Detection error:', e);
-                                        if (detectionInterval) setTimeout(detectFrame, 2000);
-                                    });
-                                }, 'image/jpeg', 0.8);
-                            }
-
-                            detectionInterval = true;
-                            detectFrame();
+                            fetch('/start_detection/').then(response => {
+                                console.log("Detection started");
+                                let startButton = document.getElementById("start-detection-btn");
+                                startButton.innerText = "Stop Detection";
+                                startButton.setAttribute("onclick", "stopDetection()");
+                            });
                         }
 
                         function stopDetection() {
-                            detectionInterval = null;
-                            var btn = document.getElementById("start-detection-btn");
-                            if (btn) {
-                                btn.innerText = "Start Detection";
-                                btn.setAttribute("onclick", "startDetection()");
-                            }
-                            // Clear overlay
-                            var overlay = document.getElementById("detection-overlay");
-                            if (overlay) overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                            fetch('/stop_detection/').then(response => {
+                                console.log("Detection stopped");
+                                let stopButton = document.getElementById("start-detection-btn");
+                                stopButton.innerText = "Start Detection";
+                                stopButton.setAttribute("onclick", "startDetection()");
+                            });
                         }
 
                         function stopWebcam() {
-                            stopDetection();
-                            if (webcamStream) {
-                                webcamStream.getTracks().forEach(track => track.stop());
-                                webcamStream = null;
-                            }
-                            var webcamVideo = document.getElementById("webcam-video");
-                            webcamVideo.srcObject = null;
-                            document.getElementById("webcam-container").style.display = "none";
-                            // clear detection overlay
-                            var overlay = document.getElementById("detection-overlay");
-                            overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+                            fetch('/stop_webcam/').then(response => {
+                                console.log("Webcam stopped");
+                                document.getElementById("webcam-feed").src = "";
+                                document.getElementById("webcam-buttons").style.display = "none"; // Hide all buttons after stopping
+                            });
                         }
 
                         function takeScreenshot() {
-                            let videoElement = document.getElementById("webcam-video");
+                            let videoElement = document.getElementById("webcam-feed");
                             let canvas = document.getElementById("screenshot-canvas");
                             let context = canvas.getContext("2d");
 
-                            if (!videoElement || !videoElement.srcObject) {
-                                alert("Please open webcam first.");
+                            if (!videoElement || videoElement.srcObject === null) {
+                                alert("Webcam not started or no video feed detected.");
                                 return;
                             }
 
@@ -1351,7 +1222,6 @@
         document.getElementById('image-upload').addEventListener('change', function (event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
-                clearAllPanels();
                 const formData = new FormData();
                 formData.append('image', file);
 
@@ -1362,7 +1232,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRFToken': getCsrfToken(),
+                        'X-CSRFToken': document.querySelector('#image-upload-form [name=csrfmiddlewaretoken]').value,
                     },
                 })
                     .then(response => {
@@ -1382,11 +1252,6 @@
                             return;
                         }
                         if (data.status === 'success') {
-                            // Hide video panel when new image is uploaded
-                            document.getElementById('annotated-video-container').style.display = 'none';
-                            document.getElementById('detection-results-video').style.display = 'none';
-                            document.getElementById('generate-report-video-button').style.display = 'none';
-
                             // Show the processed image
                             document.getElementById('annotated-image').src = data.annotated_image_url;
                             document.getElementById('annotated-image-container').style.display = 'block';
@@ -1539,41 +1404,53 @@
 
     <!-- video script -->
     <script>
-        document.getElementById('video-upload-input').addEventListener('change', function () {
-            const videoFile = this.files[0];
-            if (!videoFile) return;
-
-            clearAllPanels();
+        document.getElementById('video-upload-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const videoFile = document.getElementById("video-upload").files[0];
+            if (!videoFile) {
+                alert("Please select a video file.");
+                return;
+            }
 
             const formData = new FormData();
             formData.append("video", videoFile);
-            const csrfToken = getCsrfToken();
 
-            document.getElementById("ai-loader-video").style.display = "flex";
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            document.getElementById("ai-loader-video").style.display = "block";
 
             fetch("{% url 'upload_video' %}", {
                 method: "POST",
                 body: formData,
                 headers: { "X-CSRFToken": csrfToken }
             })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("ai-loader-video").style.display = "none";
-                if (!data.processed_video_url) {
-                    alert("Error: Video processing failed. " + (data.message || ''));
-                    return;
-                }
-                let videoUrl = data.processed_video_url.trim();
-                let videoElement = document.getElementById("annotated-video");
-                let sourceElement = document.getElementById("video-source");
-                document.getElementById("annotated-video-container").style.display = "block";
-                sourceElement.src = videoUrl;
-                videoElement.load();
-            })
-            .catch(error => {
-                document.getElementById("ai-loader-video").style.display = "none";
-                alert("Failed to process video: " + error.message);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("ai-loader-video").style.display = "none";
+
+                    if (!data.processed_video_url) {
+                        console.error("❌ No processed_video_url returned:", data);
+                        alert("Error: Video processing failed.");
+                        return;
+                    }
+
+                    let videoUrl = data.processed_video_url.trim();
+                    console.log("✅ Processed Video URL:", videoUrl);
+
+                    let videoElement = document.getElementById("annotated-video");
+                    let sourceElement = document.getElementById("video-source");
+
+                    sourceElement.src = videoUrl;
+                    videoElement.load();
+
+                    videoElement.play().catch(error => console.error("❌ Video play error:", error));
+
+                    document.getElementById("annotated-video-container").style.display = "block";
+                })
+                .catch(error => {
+                    console.error("❌ Video upload error:", error);
+                    alert("Failed to process video.");
+                });
         });
     </script>
 
