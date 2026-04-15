@@ -267,7 +267,6 @@ def view_profile(request):
 
         profile_image = request.FILES.get('profile_image')
         if profile_image:
-            # Delete old image file if exists
             import os
             if user.profile_image and user.profile_image.name:
                 try:
@@ -279,7 +278,6 @@ def view_profile(request):
             user.profile_image = profile_image
 
         user.save()
-        # Refresh user from DB to get updated profile_image URL
         user.refresh_from_db()
         messages.success(request, "Profile updated successfully!")
         return redirect("view_profile")

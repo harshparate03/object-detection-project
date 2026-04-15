@@ -5,6 +5,11 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --fake-initial --noinput
 
+# Create media directories for file uploads
+mkdir -p media/profile_images
+mkdir -p media/uploads
+mkdir -p media/output-videos
+
 # Download YOLOv3-tiny weights at build time
 if [ ! -f "yolov3-tiny.weights" ]; then
     echo "Downloading YOLOv3-tiny weights..."
