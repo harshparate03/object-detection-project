@@ -305,18 +305,19 @@ def upload_profile_image_ajax(request):
 
 @login_required
 def view_profile(request):
-    # Clear stale profile image reference only for local storage (not Cloudinary)
     user = request.user
+    # Clear stale local profile image on every page load
     if user.profile_image and not hasattr(user.profile_image, 'public_id'):
         import os
+        stale = False
         try:
-            path = user.profile_image.path
-            if not os.path.exists(path):
-                user.profile_image = None
-                user.save(update_fields=['profile_image'])
+            stale = not os.path.exists(user.profile_image.path)
         except Exception:
+            stale = True
+        if stale:
             user.profile_image = None
             user.save(update_fields=['profile_image'])
+            return redirect('view_profile')  # reload with clean state
 
     if request.method == "POST":
         user = request.user
