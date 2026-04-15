@@ -37,7 +37,7 @@ def history(request):
             'id':upload.id,
             'image_url': upload.image if upload.image else '',
             'detected_objects': detected_objects,
-            'uploaded_at': upload.uploaded_at,
+            'uploaded_at': upload.uploaded_at.strftime('%d %b %Y, %I:%M %p IST'),
             'username': upload.user.username
         })
     return render(request, 'history.html', {'user_uploads': context})
@@ -898,7 +898,7 @@ def admin_history(request):
             'id': upload.id,
             'image_url': upload.image if upload.image else '',
             'detected_objects': detected_objects,
-            'uploaded_at': upload.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),  # Directly using uploaded_at
+            'uploaded_at': upload.uploaded_at.strftime('%d %b %Y, %I:%M %p IST'),
             'username': upload.user.username,
             'email': upload.user.email,
         })
