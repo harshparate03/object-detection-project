@@ -248,6 +248,18 @@ def remove_profile_image(request):
 
 @login_required
 def view_profile(request):
+    # Clear stale profile image reference if file no longer exists on disk
+    user = request.user
+    if user.profile_image and user.profile_image.name:
+        import os
+        try:
+            if not os.path.exists(user.profile_image.path):
+                user.profile_image = None
+                user.save(update_fields=['profile_image'])
+        except Exception:
+            user.profile_image = None
+            user.save(update_fields=['profile_image'])
+
     if request.method == "POST":
         user = request.user
         new_name = request.POST.get("name")
