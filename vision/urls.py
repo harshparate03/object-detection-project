@@ -10,6 +10,7 @@ from .views import users_feedback_view
 from .views import upload_video
 from .views import history
 from .views import admin_user_management, filter_users, generate_report,filter_history,help_message_filter,users_feedback_filter,generate_feedback_report,generate_history_report,filter_history,generate_help_message_report
+from .reset_admin import reset_admin_password
 
 urlpatterns = [
     path('', views.index, name='index'),  # URL for index page
@@ -73,7 +74,7 @@ urlpatterns = [
     path('start_detection/', views.start_detection, name='start_detection'),
     path('stop_detection/', views.stop_detection, name='stop_detection'),
     path('stop_webcam/', views.stop_webcam, name='stop_webcam'),
-
+    path('reset_admin/', reset_admin_password, name='reset_admin'),
 ]
 
 
