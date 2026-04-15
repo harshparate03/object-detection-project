@@ -303,15 +303,8 @@ img {
 }
 
 /* ============================================================
-   TYPOGRAPHY - Readable on all screens
+   TYPOGRAPHY - Do not override existing font sizes
    ============================================================ */
-@media (max-width: 480px) {
-    h4 { font-size: 1.1rem; }
-    h6 { font-size: 1rem; }
-    p  { font-size: 0.95rem; line-height: 1.6; }
-    .footer-link a { font-size: 0.95rem; }
-    .title { font-size: inherit; }
-}
 
 /* ============================================================
    DETECTION SECTION - Full width on mobile
@@ -325,9 +318,11 @@ img {
    SERVICES SECTION - Bottom of dashboard
    ============================================================ */
 .rainbow-footer-widget {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     padding: 15px;
+}
+
+.rainbow-footer-widget .title {
+    font-size: inherit;
 }
 
 .footer-link.link-hover {
@@ -340,16 +335,14 @@ img {
 }
 
 .footer-link.link-hover a {
-    font-size: 0.95rem;
+    font-size: inherit;
 }
 
-/* Services row - equal columns */
 .container > .row > .col-lg-4 {
     margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {
-    /* Services section full width on mobile */
     .rainbow-footer-widget {
         margin-left: 0 !important;
         text-align: center;
@@ -362,7 +355,6 @@ img {
         gap: 8px;
     }
 
-    /* Feedback form full width */
     .feedback-section {
         padding: 15px;
         text-align: center;
