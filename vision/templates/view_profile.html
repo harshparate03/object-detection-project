@@ -61,14 +61,36 @@
                         <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                             <div class="form-group">
                                 <label for="profile_image">Profile Image</label>
-
-                                <!-- Display current profile image -->
-                                <img id="current_image"
-                                    src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}default.jpg{% endif %}"
-                                    alt="Profile Image" onclick="document.getElementById('profile_image').click();"
-                                    style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 50%; ">
-
-                                <!-- Hidden file input to update the image -->
+                                <div style="margin-top: 12px; display: flex; align-items: center; gap: 20px;">
+                                    <!-- Profile image with camera overlay -->
+                                    <div style="position: relative; display: inline-block; flex-shrink: 0;">
+                                        <img id="current_image"
+                                            src="{% if user.profile_image and user.profile_image.name %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                            alt="Profile Image"
+                                            onclick="document.getElementById('profile_image').click();"
+                                            style="cursor:pointer; width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid #ba42ff; display:block;">
+                                        <span onclick="document.getElementById('profile_image').click();"
+                                            title="Change photo"
+                                            style="position:absolute; bottom:4px; right:4px; background:#ba42ff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                            <i class="feather-camera" style="font-size:12px; color:white;"></i>
+                                        </span>
+                                    </div>
+                                    <!-- Action buttons -->
+                                    <div style="display:flex; flex-direction:column; gap:8px;">
+                                        <button type="button" class="btn-default btn-small"
+                                            onclick="document.getElementById('profile_image').click()">
+                                            <i class="feather-upload" style="margin-right:5px;"></i>Change Photo
+                                        </button>
+                                        {% if user.profile_image and user.profile_image.name %}
+                                        <a href="{% url 'remove_profile_image' %}"
+                                            onclick="return confirm('Remove profile picture? This cannot be undone.')"
+                                            class="btn-default btn-small"
+                                            style="background:transparent; border:2px solid #e74c3c; color:#e74c3c; text-align:center;">
+                                            <i class="feather-trash-2" style="margin-right:5px;"></i>Remove
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
                                 <input id="profile_image" name="profile_image" type="file" accept="image/*"
                                     style="display:none;" onchange="previewImage(event)">
                             </div>
@@ -126,6 +148,15 @@
         </div>
     </div>
     {% include 'includes/footer.html' %}
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('current_image').src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 </body>
 
 </html>
