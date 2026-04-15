@@ -323,30 +323,24 @@
 
                         <div id="detection-section" class="button-group mt--50 text-center"
                             style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
-                            <div class="button-container" style="display: flex; justify-content: center; gap: 15px;">
+                            <div class="button-container" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
                                 <!-- Image Upload Button -->
-                                <form id="image-upload-form" enctype="multipart/form-data">
+                                <form id="image-upload-form" enctype="multipart/form-data" style="margin: 0; padding: 0;">
                                     {% csrf_token %}
-                                    <input type="file" id="image-upload" name="image" accept="image/*"
-                                        style="display: none;" />
-                                    <button type="button" class="btn-default btn-large"
-                                        onclick="document.getElementById('image-upload').click();">
-                                        Upload Image
-                                    </button>
+                                    <input type="file" id="image-upload" name="image" accept="image/*" style="display: none;" />
+                                    <button type="button" class="btn-default btn-large main-action-btn"
+                                        onclick="document.getElementById('image-upload').click();">Upload Image</button>
                                 </form>
 
                                 <!-- Video Upload Button -->
-                                <form id="video-upload-form" enctype="multipart/form-data">
-                                    <input type="file" id="video-upload-input" name="video" accept="video/*"
-                                        style="display: none;" />
-                                    <button type="button" class="btn-default btn-large"
-                                        onclick="document.getElementById('video-upload-input').click();">
-                                        Upload Video
-                                    </button>
+                                <form id="video-upload-form" enctype="multipart/form-data" style="margin: 0; padding: 0;">
+                                    <input type="file" id="video-upload-input" name="video" accept="video/*" style="display: none;" />
+                                    <button type="button" class="btn-default btn-large main-action-btn"
+                                        onclick="document.getElementById('video-upload-input').click();">Upload Video</button>
                                 </form>
 
                                 <!-- Webcam Button -->
-                                <button class="btn-default btn-large btn-border" onclick="openWebcam();">Webcam</button>
+                                <button class="btn-default btn-large btn-border main-action-btn" onclick="openWebcam();">Webcam</button>
                             </div>
                         </div>
 
