@@ -230,6 +230,22 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile  # Import the model
 
 @login_required
+def remove_profile_image(request):
+    user = request.user
+    if user.profile_image:
+        try:
+            import os
+            if os.path.exists(user.profile_image.path):
+                os.remove(user.profile_image.path)
+        except Exception:
+            pass
+        user.profile_image = None
+        user.save()
+        messages.success(request, 'Profile picture removed.')
+    return redirect('view_profile')
+
+
+@login_required
 def view_profile(request):
     if request.method == "POST":
         user = request.user

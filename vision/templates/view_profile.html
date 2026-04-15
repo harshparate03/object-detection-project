@@ -61,14 +61,30 @@
                         <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                             <div class="form-group">
                                 <label for="profile_image">Profile Image</label>
-
-                                <!-- Display current profile image -->
-                                <img id="current_image"
-                                    src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}default.jpg{% endif %}"
-                                    alt="Profile Image" onclick="document.getElementById('profile_image').click();"
-                                    style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 50%; ">
-
-                                <!-- Hidden file input to update the image -->
+                                <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                                    <!-- Display current profile image or default -->
+                                    <img id="current_image"
+                                        src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                        alt="Profile Image"
+                                        onclick="document.getElementById('profile_image').click();"
+                                        style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 3px solid #ba42ff;">
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <button type="button" class="btn-default btn-small"
+                                            onclick="document.getElementById('profile_image').click();"
+                                            style="font-size: 0.85rem; padding: 6px 14px;">
+                                            <i class="feather-upload"></i> Change Photo
+                                        </button>
+                                        {% if user.profile_image %}
+                                        <a href="{% url 'remove_profile_image' %}"
+                                            onclick="return confirm('Remove profile picture?')"
+                                            class="btn-default btn-small"
+                                            style="font-size: 0.85rem; padding: 6px 14px; background: #e74c3c; border-color: #e74c3c; text-align: center;">
+                                            <i class="feather-trash-2"></i> Remove
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <!-- Hidden file input -->
                                 <input id="profile_image" name="profile_image" type="file" accept="image/*"
                                     style="display:none;" onchange="previewImage(event)">
                             </div>
@@ -126,6 +142,15 @@
         </div>
     </div>
     {% include 'includes/footer.html' %}
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('current_image').src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 </body>
 
 </html>
