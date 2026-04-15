@@ -194,36 +194,27 @@ def password_reset(request):
         if new_password != confirm_password:
             return render(request, 'password_reset.html', {'error': 'Passwords do not match.'})
         
-        # Validate the new password
         try:
             validate_password(new_password)
         except ValidationError as e:
             return render(request, 'password_reset.html', {'error': e.messages})
         
-        # Retrieve the user from the session
         user_id = request.session.get('user_id')
         if not user_id:
-            return redirect('signin')  # Redirect to sign-in if the session is missing
-        
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
             return redirect('signin')
         
-        # Store the old password hash before updating
-        old_password_hash = user.password
+        try:
+            from .models import UserProfile
+            user = UserProfile.objects.get(id=user_id)
+        except UserProfile.DoesNotExist:
+            return redirect('signin')
         
-        # Check if the new password is the same as the old password
-        if check_password(new_password, old_password_hash):
+        if check_password(new_password, user.password):
             return render(request, 'password_reset.html', {'error': 'New password cannot be the same as the old password.'})
         
-        # Update the password
-        user.password = make_password(new_password)
+        user.set_password(new_password)
         user.save()
-
-        # Optionally log the user back in
         update_session_auth_hash(request, user)
-        
         messages.success(request, 'Password reset successfully.')
         return redirect('signin')
     
