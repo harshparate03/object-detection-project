@@ -230,22 +230,6 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile  # Import the model
 
 @login_required
-def remove_profile_image(request):
-    user = request.user
-    if user.profile_image:
-        try:
-            import os
-            if os.path.exists(user.profile_image.path):
-                os.remove(user.profile_image.path)
-        except Exception:
-            pass
-        user.profile_image = None
-        user.save()
-        messages.success(request, 'Profile picture removed.')
-    return redirect('view_profile')
-
-
-@login_required
 def view_profile(request):
     if request.method == "POST":
         user = request.user
@@ -253,6 +237,7 @@ def view_profile(request):
         new_email = request.POST.get("email")
         new_phone = request.POST.get("phone")
 
+        # Check if email or phone already exists in the database
         if UserProfile.objects.filter(email=new_email).exclude(id=user.id).exists():
             messages.error(request, "This email is already in use.")
             return redirect("view_profile")
@@ -261,26 +246,18 @@ def view_profile(request):
             messages.error(request, "This phone number is already in use.")
             return redirect("view_profile")
 
+        # If no duplicates, update the user profile
         user.name = new_name
         user.email = new_email
         user.phone = new_phone
 
         profile_image = request.FILES.get('profile_image')
         if profile_image:
-            import os
-            if user.profile_image and user.profile_image.name:
-                try:
-                    old_path = user.profile_image.path
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                except Exception:
-                    pass
-            user.profile_image = profile_image
-
-        user.save()
-        user.refresh_from_db()
+            user.profile_image = profile_image  # Update profile image if a new file is uploaded
+        user.save()  # Save the updated user details
         messages.success(request, "Profile updated successfully!")
-        return redirect("view_profile")
+
+        return redirect("view_profile")  # Redirect to profile page after update
 
     return render(request, "view_profile.html")
 
