@@ -473,110 +473,44 @@
                         //             .then((data) => {
                         //                 aiLoader.style.display = "none"; // Hide loader
 
-                        //                 if (data.status === "success") {
-                        //                     videoSource.src = data.processed_video_url;
-                        //                     processedVideo.load();
-                        //                     processedVideo.play().catch(error => console.error("Play error:", error));
-
-                        //                     processedVideoContainer.style.display = "block";
-
-                        //                     // Populate detected objects list
-                        //                     detectionsList.innerHTML = "";
-                        //                     if (data.detected_objects && data.detected_objects.length > 0) {
-                        //                         data.detected_objects.forEach((item) => {
-                        //                             const listItem = document.createElement("li");
-                        //                             listItem.textContent = `${item.label}: ${item.count} detected`;
-                        //                             detectionsList.appendChild(listItem);
-                        //                         });
-
-                        //                         reportButton.style.display = "block";
-                        //                     } else {
-                        //                         detectionsList.innerHTML = "<li>No objects detected</li>";
-                        //                     }
-                        //                 } else {
-                        //                     showAlert("Error processing the video: " + data.message, "error");
-                        //                 }
-                        //             })
-                        //             .catch((error) => {
-                        //                 aiLoader.style.display = "none";
-                        //                 showAlert("An error occurred while processing the video", "error");
-                        //                 console.error("Video upload error:", error);
-                        //             });
-                        //         } else {
-                        //             showAlert("Please upload a valid video file", "warning");
-                        //         }
-                        //     }
-
-                        //     function generateVideoReport() {
-                        //         showAlert("Video report is being generated...", "info");
-                        //         // Add report generation logic here
-                        //     }
-
-                        //     function showAlert(message, type) {
-                        //         const alertBox = document.createElement("div");
-                        //         alertBox.className = `alert alert-${type}`;
-                        //         alertBox.textContent = message;
-                        //         document.body.appendChild(alertBox);
-
-                        //         setTimeout(() => {
-                        //             alertBox.remove();
-                        //         }, 3000);
-                        //     }
-
-                        //     reportButton.addEventListener("click", generateVideoReport);
-                        // });
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const videoUploadInput = document.getElementById("video-upload-input");
-                            const aiLoader = document.getElementById("ai-loader-video");
-                            const processedVideoContainer = document.getElementById("annotated-video-container");
-                            const processedVideo = document.getElementById("annotated-video");
-                            const videoSource = document.getElementById("video-source");
-                            const detectionsList = document.getElementById("video-detection-list");
-                            const reportButton = document.getElementById("generate-report-video-button");
-
-                            videoUploadInput.addEventListener("change", function () {
-                                handleVideoUpload(this);
-                            });
-
-                            function handleVideoUpload(input) {
-                                const file = input.files[0];
-
-                                if (file && file.type.startsWith("video/")) {
-                                    const formData = new FormData();
-                                    formData.append("video", file);
-
-                                    aiLoader.style.display = "flex"; // Show loader
-                                    processedVideoContainer.style.display = "none";
-                                    detectionsList.innerHTML = "";
-                                    reportButton.style.display = "none";
-
-                                    fetch("{% url 'upload_video' %}", {
-                                        method: "POST",
-                                        body: formData,
-                                        headers: {
-                                            "X-CSRFToken": getCsrfToken()
-                                        },
-                                    })
-                                        .then((response) => {
-                                            if (!response.ok) {
-                                                throw new Error("Server error: " + response.status);
-                                            }
-                                            return response.json();
-                                        })
-                                        .then((data) => {
-                                            aiLoader.style.display = "none"; // Hide loader
-
-                                            if (data.status === "success") {
-                                                console.log("✅ Frames received:", data.frames ? data.frames.length : 0);
-
-                                                // ✅ Correctly set the video source
-                                                videoSource.src = data.processed_video_url;
-                                                processedVideo.load();
+                                            if (data.status === "success" && data.frames && data.frames.length > 0) {
+                                                console.log("✅ Frames received:", data.frames.length);
+                                                const frames = data.frames;
+                                                const fps = data.fps || 5;
+                                                let frameIdx = 0;
 
                                                 processedVideoContainer.style.display = "block";
-                                                processedVideo.style.display = "block";
-                                                setTimeout(function() { processedVideoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+                                                processedVideo.style.display = "none";
+
+                                                let slideImg = document.getElementById('video-slideshow');
+                                                if (!slideImg) {
+                                                    slideImg = document.createElement('img');
+                                                    slideImg.id = 'video-slideshow';
+                                                    slideImg.style.cssText = 'max-width:100%;border:2px solid white;border-radius:10px;display:block;margin:0 auto;';
+                                                    processedVideoContainer.appendChild(slideImg);
+                                                }
+                                                slideImg.style.display = 'block';
+                                                slideImg.src = frames[0];
+
+                                                if (window._videoInterval) clearInterval(window._videoInterval);
+                                                window._videoInterval = setInterval(() => {
+                                                    frameIdx = (frameIdx + 1) % frames.length;
+                                                    slideImg.src = frames[frameIdx];
+                                                }, 1000 / fps);
+
+                                                if (data.detected_objects && data.detected_objects.length > 0) {
+                                                    detectionsList.innerHTML = '';
+                                                    data.detected_objects.forEach(obj => {
+                                                        const li = document.createElement('li');
+                                                        li.textContent = obj.label + ': ' + obj.count;
+                                                        li.style.color = 'white';
+                                                        detectionsList.appendChild(li);
+                                                    });
+                                                    document.getElementById('detection-results-video').style.display = 'block';
+                                                    reportButton.style.display = 'inline-block';
+                                                }
+
+                                                setTimeout(() => processedVideoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
 
                                             } else {
                                                 alert("Error processing the video: " + data.message, "error");
