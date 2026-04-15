@@ -387,10 +387,10 @@
                         </div>
 
                         <!-- Placeholder for Annotated Video -->
-                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px;">
-                            <button onclick="closeVideoResult()" style="position: absolute; top: 0; right: 0; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">&times;</button>
+                        <div id="annotated-video-container" style="display: none; position: relative; text-align: center; margin-top: 20px; width: 100%;">
+                            <button onclick="closeVideoResult()" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 18px; cursor: pointer; z-index: 10;">&times;</button>
                             <h4>Processed Video:</h4>
-                            <video id="annotated-video" controls style="width: 80%; max-width: 900px; height: auto; border: 2px solid white; border-radius: 10px;">
+                            <video id="annotated-video" controls style="width: 100%; max-width: 900px; height: auto; border: 2px solid white; border-radius: 10px; display: block; margin: 0 auto;">
                                 <source id="video-source" src="">
                                 Your browser does not support the video tag.
                             </video>
@@ -1147,8 +1147,8 @@
 
                     <!-- Services Section -->
                     <div class="col-lg-4 col-md-6 col-sm-6 col-12">
-                        <div class="rainbow-footer-widget" style="margin-left: 40px;">
-                            <div class="widget-menu-top" style="margin-right: 0px;">
+                        <div class="rainbow-footer-widget">
+                            <div class="widget-menu-top">
                                 <h4 class="title">Services</h4>
                                 <div class="inner">
                                     <ul class="footer-link link-hover">

@@ -320,16 +320,110 @@ img {
 }
 
 /* ============================================================
-   FEEDBACK FORM - Responsive
+   SERVICES SECTION - Bottom of dashboard
    ============================================================ */
-@media (max-width: 480px) {
+.rainbow-footer-widget {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 15px;
+}
+
+.footer-link.link-hover {
+    padding-left: 0;
+    list-style: none;
+}
+
+.footer-link.link-hover li {
+    margin-bottom: 8px;
+}
+
+.footer-link.link-hover a {
+    font-size: 0.95rem;
+}
+
+/* Services row - equal columns */
+.container > .row > .col-lg-4 {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    /* Services section full width on mobile */
+    .rainbow-footer-widget {
+        margin-left: 0 !important;
+        text-align: center;
+    }
+
+    .footer-link.link-hover {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Feedback form full width */
+    .feedback-section {
+        padding: 15px;
+        text-align: center;
+    }
+
     .feedback-section textarea {
-        font-size: 0.9rem;
+        width: 100%;
     }
 
     .feedback-section .btn {
         width: 100%;
         min-height: 44px;
+        margin-top: 10px;
+    }
+}
+
+/* ============================================================
+   VIDEO PLAYER - Mobile responsive
+   ============================================================ */
+#annotated-video-container {
+    width: 100%;
+    padding: 0 10px;
+}
+
+#annotated-video {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    #annotated-video-container {
+        padding: 0 5px;
+    }
+
+    #annotated-video {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 8px !important;
+    }
+
+    /* Close button always visible */
+    #annotated-video-container > button {
+        position: fixed !important;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 18px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #annotated-video {
+        border-radius: 6px !important;
+    }
+
+    /* Video processing loader text */
+    #ai-loader-video p {
+        font-size: 0.9rem;
     }
 }
 
