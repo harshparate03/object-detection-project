@@ -35,7 +35,7 @@ def history(request):
         detected_objects = ast.literal_eval(upload.detected_objects)  # Safely parse the string
         context.append({
             'id':upload.id,
-            'image_url': upload.image.url if upload.image and hasattr(upload.image, 'url') else '',
+            'image_url': upload.image if upload.image else '',
             'detected_objects': detected_objects,
             'uploaded_at': upload.uploaded_at,
             'username': upload.user.username
@@ -583,14 +583,11 @@ def upload_image(request):
 
             from .models import UploadHistory
             from django.utils.timezone import now
-            output_name = f"annotated_{uploaded_file.name}"
-            try:
-                default_storage.save(output_name, ContentFile(out_buffer.tobytes()))
-            except Exception:
-                pass
+            import base64 as _b64
+            annotated_b64 = "data:image/jpeg;base64," + _b64.b64encode(out_buffer.tobytes()).decode('utf-8')
             UploadHistory.objects.create(
                 user=request.user,
-                image=output_name,
+                image=annotated_b64,
                 detected_objects=str(detected_objects),
                 uploaded_at=now()
             )
@@ -885,11 +882,7 @@ def upload_history(request):
 def delete_upload_history(request, upload_id):
     upload = get_object_or_404(UploadHistory, id=upload_id, user=request.user)
     try:
-        if upload.image:
-            image_path = upload.image.path
-            if os.path.exists(image_path):
-                os.remove(image_path)  # Delete the image file from the system
-        upload.delete()  # Delete the record from the database
+        upload.delete()
         messages.success(request, "Upload history entry deleted successfully.")
     except Exception as e:
         messages.error(request, f"An error occurred while deleting the history entry: {e}")
@@ -903,7 +896,7 @@ def admin_history(request):
         detected_objects = ast.literal_eval(upload.detected_objects)
         context.append({
             'id': upload.id,
-            'image_url': upload.image.url if upload.image and hasattr(upload.image, 'url') else '',
+            'image_url': upload.image if upload.image else '',
             'detected_objects': detected_objects,
             'uploaded_at': upload.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),  # Directly using uploaded_at
             'username': upload.user.username,
@@ -916,10 +909,6 @@ def admin_delete_history(request, pk):
     history_item = get_object_or_404(UploadHistory, pk=pk)
 
     try:
-        if history_item.image:
-            image_path = history_item.image.path
-            if os.path.exists(image_path):
-                os.remove(image_path)
         history_item.delete()
         messages.success(request, "History entry deleted successfully.")
     except Exception as e:

@@ -126,7 +126,7 @@ from django.conf import settings
 
 class UploadHistory(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='upload_history/')
+    image = models.TextField(blank=True, null=True)  # base64 data URL
     detected_objects = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
