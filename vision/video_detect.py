@@ -606,76 +606,49 @@ class YOLODetector:
 
     def process_video(self, source: str):
         """
-        Process video from file and save it to media/output-videos/
+        Process video from file, return output path using mp4v codec.
         """
         try:
             cap = cv2.VideoCapture(source)
             if not cap.isOpened():
-                raise ValueError("❌ Could not open video source")
+                raise ValueError("Could not open video source")
 
             frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = int(cap.get(cv2.CAP_PROP_FPS) or 30)  # Ensure FPS is never 0
+            fps = int(cap.get(cv2.CAP_PROP_FPS) or 25)
 
-            # ✅ Ensure output directory is in MEDIA_ROOT
             output_dir = os.path.join(settings.MEDIA_ROOT, 'output-videos')
             os.makedirs(output_dir, exist_ok=True)
 
-            # ✅ Define processed video path
-            output_file = os.path.join(output_dir, f"processed_{os.path.basename(source)}")
+            base_name = os.path.splitext(os.path.basename(source))[0]
+            output_file = os.path.join(output_dir, f"processed_{base_name}.mp4")
 
-            # ✅ Ensure the output file is an .mp4 file
-            if not output_file.endswith(".mp4"):
-                output_file = output_file.replace(".avi", ".mp4").replace(".mov", ".mp4")
-
-            # fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use MP4 codec
-            fourcc = cv2.VideoWriter_fourcc(*'H264')  # H.264 for better browser compatibility
-
+            # Use mp4v — universally available on all platforms
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             writer = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
 
-            self.logger.info(f"🔍 Saving Processed Video to: {output_file}")
-
             if not writer.isOpened():
-                self.logger.error(f"❌ Failed to open VideoWriter for: {output_file}")
-                return None
-
-            frame_count, total_time = 0, 0
+                raise ValueError("VideoWriter failed to open")
 
             while True:
                 ret, frame = cap.read()
                 if not ret:
                     break
-
-                start_time = time.time()
-                annotated_frame, detections = self.process_frame(frame)
-                process_time = time.time() - start_time
-
-                frame_count += 1
-                total_time += process_time
-
-                fps_current = 1 / (process_time or 1e-9)
-                cv2.putText(
-                    annotated_frame,
-                    f"FPS: {fps_current:.1f}",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1, (0, 255, 0), 2
-                )
-
-                writer.write(annotated_frame)  # Save frame to output video
+                annotated_frame, _ = self.process_frame(frame)
+                writer.write(annotated_frame)
 
             cap.release()
             writer.release()
 
-            if os.path.exists(output_file):
-                self.logger.info(f"✅ Processed video saved at: {output_file}")
+            if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
+                self.logger.info(f"Processed video saved: {output_file}")
                 return output_file
             else:
-                self.logger.error(f"❌ Processed video NOT saved! Check VideoWriter settings.")
+                self.logger.error("Processed video not saved")
                 return None
 
         except Exception as e:
-            self.logger.error(f"❌ Video processing error: {e}")
+            self.logger.error(f"Video processing error: {e}")
             return None
 
 
