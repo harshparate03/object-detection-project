@@ -35,7 +35,7 @@ def history(request):
         detected_objects = ast.literal_eval(upload.detected_objects)  # Safely parse the string
         context.append({
             'id':upload.id,
-            'image_url': upload.image.url,
+            'image_url': upload.image.url if upload.image and hasattr(upload.image, 'url') else '',
             'detected_objects': detected_objects,
             'uploaded_at': upload.uploaded_at,
             'username': upload.user.username
@@ -664,12 +664,15 @@ def edit_user(request, user_id):
     user = get_object_or_404(UserProfile, id=user_id, role="user")
 
     if request.method == 'POST':
-        form = CustomUserForm(request.POST, request.FILES, instance=user)  # Include request.FILES for file uploads
+        form = CustomUserForm(request.POST, instance=user)
         if form.is_valid():
-            user = form.save(commit=False)  # Save form but don’t commit to database yet
-            if 'profile_image' in request.FILES:  # Check if new profile image is uploaded
-                user.profile_image = request.FILES['profile_image']
-            user.save()  # Save user instance
+            user = form.save(commit=False)
+            if 'profile_image' in request.FILES:
+                import base64
+                img = request.FILES['profile_image']
+                img_data = base64.b64encode(img.read()).decode('utf-8')
+                user.profile_image = f"data:{img.content_type};base64,{img_data}"
+            user.save()
             messages.success(request, 'User updated successfully!')
             return redirect('admin_dashboard')
     else:
@@ -900,7 +903,7 @@ def admin_history(request):
         detected_objects = ast.literal_eval(upload.detected_objects)
         context.append({
             'id': upload.id,
-            'image_url': upload.image.url,
+            'image_url': upload.image.url if upload.image and hasattr(upload.image, 'url') else '',
             'detected_objects': detected_objects,
             'uploaded_at': upload.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),  # Directly using uploaded_at
             'username': upload.user.username,
@@ -1029,7 +1032,7 @@ def generate_report(request):
     data = [["Sr. No", "Profile", "Username", "Name", "Email", "Phone", "Join Date", "Status"]]
 
     for index, user in enumerate(users, start=1):
-        profile_image_path = user.profile_image.path if user.profile_image else None
+        profile_image_path = None  # profile_image is now base64 text, not a file path
 
         # Profile image handling
         if profile_image_path and default_storage.exists(profile_image_path):
