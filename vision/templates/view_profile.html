@@ -61,30 +61,35 @@
                         <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                             <div class="form-group">
                                 <label for="profile_image">Profile Image</label>
-                                <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
-                                    <!-- Display current profile image or default -->
-                                    <img id="current_image"
-                                        src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
-                                        alt="Profile Image"
-                                        onclick="document.getElementById('profile_image').click();"
-                                        style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 3px solid #ba42ff;">
-                                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        <button type="button" class="btn-default btn-small"
+                                <div style="margin-top: 12px;">
+                                    <!-- Profile image circle -->
+                                    <div style="position: relative; display: inline-block; margin-bottom: 15px;">
+                                        <img id="current_image"
+                                            src="{% if user.profile_image and user.profile_image.name %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                            alt="Profile Image"
                                             onclick="document.getElementById('profile_image').click();"
-                                            style="font-size: 0.85rem; padding: 6px 14px;">
-                                            <i class="feather-upload"></i> Change Photo
+                                            style="cursor: pointer; width: 110px; height: 110px; object-fit: cover; border-radius: 50%; border: 3px solid #ba42ff; display: block;">
+                                        <span onclick="document.getElementById('profile_image').click();"
+                                            style="position: absolute; bottom: 4px; right: 4px; background: #ba42ff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                            <i class="feather-camera" style="font-size: 13px; color: white;"></i>
+                                        </span>
+                                    </div>
+                                    <!-- Buttons row -->
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button type="button" class="btn-default btn-small"
+                                            onclick="document.getElementById('profile_image').click()">
+                                            <i class="feather-upload" style="margin-right: 5px;"></i>Change Photo
                                         </button>
-                                        {% if user.profile_image %}
+                                        {% if user.profile_image and user.profile_image.name %}
                                         <a href="{% url 'remove_profile_image' %}"
                                             onclick="return confirm('Remove profile picture?')"
                                             class="btn-default btn-small"
-                                            style="font-size: 0.85rem; padding: 6px 14px; background: #e74c3c; border-color: #e74c3c; text-align: center;">
-                                            <i class="feather-trash-2"></i> Remove
+                                            style="background: transparent; border: 2px solid #e74c3c; color: #e74c3c;">
+                                            <i class="feather-trash-2" style="margin-right: 5px;"></i>Remove
                                         </a>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <!-- Hidden file input -->
                                 <input id="profile_image" name="profile_image" type="file" accept="image/*"
                                     style="display:none;" onchange="previewImage(event)">
                             </div>

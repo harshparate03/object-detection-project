@@ -33,7 +33,7 @@
                             <div class="rbt-user ml--0">
                                 <a class="admin-img" href="#">
                                     <img alt="User" width="920" height="920" style="color:transparent"
-                                        src="{{ user.profile_image.url }}" />
+                                        src="{% if user.profile_image and user.profile_image.name %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" />
                                 </a>
                             </div>
 
@@ -42,7 +42,7 @@
                                     <div class="rbt-admin-profile">
                                         <div class="admin-thumbnail">
                                             <img alt="User Images" width="920" height="920" data-nimg="1"
-                                                style="color:transparent" src="{{ user.profile_image.url }}" />
+                                                style="color:transparent" src="{% if user.profile_image and user.profile_image.name %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" />
                                         </div>
                                         <div class="admin-info profile-image-info">
                                             <span class="name">
