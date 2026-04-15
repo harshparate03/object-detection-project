@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 <div class="container">
 
@@ -85,8 +86,8 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>
-                                <img src="{{ user.profile_image.url }}" alt="Profile Image" class="rounded-circle"
-                                    width="40" height="40">
+                                <img src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}" alt="Profile Image" class="rounded-circle"
+                                    width="40" height="40" onerror="this.src='{% static 'images/default.jpg' %}'">
                             </td>
                             <td class="username">{{ user.username }}</td>
                             <td>{{ user.name|default:user.username }}</td>
@@ -302,87 +303,16 @@
             rows.forEach(row => {
                 let joinDateElem = row.querySelector(".join-date");
                 if (!joinDateElem) return;
-
-                let joinDateStr = joinDateElem.textContent.trim();
-
-                // 🔹 Check the format (Assuming the format is YYYY-MM-DD)
-                let joinDateObj = new Date(joinDateStr);
-
-                console.log(`Checking: ${joinDateObj.toISOString().split('T')[0]} against ${startDate} - ${endDate}`);
-
-                if (!isNaN(joinDateObj.getTime())) {  // ✅ Ensure valid date
+                let joinDateObj = new Date(joinDateElem.textContent.trim());
+                if (!isNaN(joinDateObj.getTime())) {
                     let isVisible = joinDateObj >= startDateObj && joinDateObj <= endDateObj;
                     row.style.display = isVisible ? "" : "none";
                     if (isVisible) hasResults = true;
-                } else {
-                    console.warn(`Invalid date format detected: ${joinDateStr}`);
                 }
             });
 
-            document.getElementById("downloadReportBtn").style.display = hasResults ? "inline-block" : "none";
-
-            if (!hasResults) {
-                alert("No users found in the selected date range.");
-            }
+            if (!hasResults) alert("No users found in the selected date range.");
         });
-
-        // ✅ **Download Report**
-        document.getElementById("downloadReportBtn").addEventListener("click", function () {
-            let startDate = document.getElementById("startDate").value;
-            let endDate = document.getElementById("endDate").value;
-
-            if (!startDate || !endDate) {
-                alert("Please select a valid date range before downloading the report.");
-                return;
-            }
-
-            let users = [];
-            document.querySelectorAll("#userTable tbody tr").forEach(row => {
-                let usernameEl = row.querySelector(".username");
-                let emailEl = row.querySelector(".email");
-                let joinDateEl = row.querySelector(".join-date");
-
-                if (row.style.display !== "none" && usernameEl && emailEl && joinDateEl) {
-                    users.push({
-                        username: usernameEl.textContent.trim(),
-                        email: emailEl.textContent.trim(),
-                        date_joined: joinDateEl.textContent.trim()
-                    });
-                }
-            });
-
-            if (users.length === 0) {
-                alert("No users found in the selected date range.");
-                return;
-            }
-
-            fetch("{% url 'generate_report' %}", {  // ✅ Use Django URL template
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: JSON.stringify({ start_date: startDate, end_date: endDate, users: users })
-            })
-                .then(response => response.json())  // ✅ Expect JSON response
-                .then(data => {
-                    if (data.error) throw new Error(data.error);
-                    alert("Report generated successfully!");
-                    console.log(data);
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("Error generating report. Please try again.");
-                });
-        });
-
-        // 🔑 **Get CSRF Token**
-        function getCSRFToken() {
-            let csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
-            if (csrfTokenInput) return csrfTokenInput.value;
-            let csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
-            return csrfMetaTag ? csrfMetaTag.getAttribute("content") : "";
-        }
     </script>
 
 
