@@ -32,7 +32,7 @@
                             <!-- If user is logged in, show profile image -->
                             <div class="rbt-user ml--0">
                                 <a class="admin-img" href="#">
-                                    <img alt="User" width="920" height="920" style="color:transparent"
+                                    <img alt="User" width="40" height="40" style="color:transparent; width:40px; height:40px; object-fit:cover; border-radius:50%;"
                                         src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
                                         onerror="this.src='{% static 'images/default.jpg' %}'" />
                                 </a>
@@ -42,8 +42,8 @@
                                 <div class="inner">
                                     <div class="rbt-admin-profile">
                                         <div class="admin-thumbnail">
-                                            <img alt="User Images" width="920" height="920" data-nimg="1"
-                                                style="color:transparent"
+                                            <img alt="User Images" width="50" height="50" data-nimg="1"
+                                                style="color:transparent; width:50px; height:50px; object-fit:cover; border-radius:50%;"
                                                 src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
                                                 onerror="this.src='{% static 'images/default.jpg' %}'" />
                                         </div>
