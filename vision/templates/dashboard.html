@@ -568,7 +568,7 @@
                                             aiLoader.style.display = "none"; // Hide loader
 
                                             if (data.status === "success") {
-                                                console.log("✅ Processed Video URL::", data.processed_video_url);
+                                                console.log("✅ Frames received:", data.frames ? data.frames.length : 0);
 
                                                 // ✅ Correctly set the video source
                                                 videoSource.src = data.processed_video_url;
@@ -1535,24 +1535,46 @@
                 .then(data => {
                     document.getElementById("ai-loader-video").style.display = "none";
 
-                    if (!data.processed_video_url) {
-                        console.error("❌ No processed_video_url returned:", data);
-                        alert("Error: Video processing failed.");
-                        return;
+                    if (data.status === "success" && data.frames && data.frames.length > 0) {
+                        const frames = data.frames;
+                        const fps = data.fps || 5;
+                        let frameIdx = 0;
+
+                        document.getElementById("annotated-video-container").style.display = "block";
+                        document.getElementById("annotated-video").style.display = "none";
+
+                        let slideImg = document.getElementById('video-slideshow');
+                        if (!slideImg) {
+                            slideImg = document.createElement('img');
+                            slideImg.id = 'video-slideshow';
+                            slideImg.style.cssText = 'max-width:100%;border:2px solid white;border-radius:10px;display:block;margin:0 auto;';
+                            document.getElementById("annotated-video-container").appendChild(slideImg);
+                        }
+                        slideImg.style.display = 'block';
+                        slideImg.src = frames[0];
+
+                        if (window._videoInterval) clearInterval(window._videoInterval);
+                        window._videoInterval = setInterval(() => {
+                            frameIdx = (frameIdx + 1) % frames.length;
+                            slideImg.src = frames[frameIdx];
+                        }, 1000 / fps);
+
+                        if (data.detected_objects && data.detected_objects.length > 0) {
+                            const list = document.getElementById("video-detection-list");
+                            list.innerHTML = '';
+                            data.detected_objects.forEach(obj => {
+                                const li = document.createElement('li');
+                                li.textContent = obj.label + ': ' + obj.count;
+                                li.style.color = 'white';
+                                list.appendChild(li);
+                            });
+                            document.getElementById("detection-results-video").style.display = "block";
+                        }
+
+                        setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                    } else {
+                        alert("Error: " + (data.message || "Video processing failed."));
                     }
-
-                    let videoUrl = data.processed_video_url.trim();
-                    console.log("✅ Processed Video URL:", videoUrl);
-
-                    let videoElement = document.getElementById("annotated-video");
-                    let sourceElement = document.getElementById("video-source");
-
-                    sourceElement.src = videoUrl;
-                    videoElement.load();
-
-                    videoElement.play().catch(error => console.error("❌ Video play error:", error));
-
-                    document.getElementById("annotated-video-container").style.display = "block";
                 })
                 .catch(error => {
                     console.error("❌ Video upload error:", error);
