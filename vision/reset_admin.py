@@ -10,15 +10,18 @@ def reset_admin_password(request):
     try:
         admin = UserProfile.objects.filter(role='admin').first()
         if not admin:
-            # Create admin if doesn't exist
-            admin = UserProfile.objects.create_superuser(
+            admin = UserProfile(
                 username='admin',
                 email='admin@gmail.com',
-                password='Admin@1234'
+                name='Admin',
+                phone='0000000000',
+                role='admin',
+                is_superuser=True,
+                is_staff=True
             )
-            admin.role = 'admin'
+            admin.set_password('Admin@1234')
             admin.save()
-            return HttpResponse(f'Admin created: email=admin@gmail.com password=Admin@1234')
+            return HttpResponse('Admin created! Email: admin@gmail.com | Password: Admin@1234')
         
         admin.set_password('Admin@1234')
         admin.save()
