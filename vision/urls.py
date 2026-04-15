@@ -26,6 +26,7 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
     path('view_profile/', views.view_profile, name='view_profile'),
     path('remove_profile_image/', views.remove_profile_image, name='remove_profile_image'),
+    path('upload_profile_image/', views.upload_profile_image_ajax, name='upload_profile_image_ajax'),
     path('change_password/', views.change_password, name='change_password'),
     path('delete_account/', views.delete_account, name='delete_account'),
     path('help_center/', views.help_center, name='help_center'),

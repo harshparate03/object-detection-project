@@ -1,8 +1,19 @@
+import os
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.contrib.auth.models import User  # Default user model
-# OR, if you are using a custom user model:
-# from vision.models import UserProfile
+
+
+def _profile_image_field():
+    """Return CloudinaryField if Cloudinary is configured, else ImageField."""
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+    if cloud_name:
+        try:
+            from cloudinary.models import CloudinaryField
+            return CloudinaryField('profile_image', folder='profile_pics', blank=True, null=True)
+        except ImportError:
+            pass
+    return models.ImageField(upload_to='profile_pics/', blank=True, null=True)
 
 
 # Create your models here.
@@ -54,7 +65,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-    profile_image = models.ImageField(upload_to='profile_pics/', default='default.jpg')
+    profile_image = _profile_image_field()
     is_active = models.BooleanField(default=True)
     status = models.CharField(
         max_length=10,

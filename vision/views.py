@@ -231,29 +231,87 @@ from .models import UserProfile  # Import the model
 
 @login_required
 def remove_profile_image(request):
+    if request.method != 'POST':
+        return redirect('view_profile')
     user = request.user
-    if user.profile_image and user.profile_image.name:
+    if user.profile_image:
         try:
-            import os
-            path = user.profile_image.path
-            if os.path.exists(path):
-                os.remove(path)
+            # Cloudinary: delete from cloud
+            if hasattr(user.profile_image, 'public_id'):
+                import cloudinary.uploader
+                cloudinary.uploader.destroy(user.profile_image.public_id)
+            else:
+                # Local filesystem
+                import os
+                try:
+                    path = user.profile_image.path
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception:
+                    pass
         except Exception:
             pass
         user.profile_image = None
         user.save()
-        messages.success(request, 'Profile picture removed.')
+    from django.http import JsonResponse
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from django.templatetags.static import static
+        return JsonResponse({'success': True, 'default_url': static('images/default.jpg')})
+    messages.success(request, 'Profile picture removed.')
     return redirect('view_profile')
 
 
 @login_required
-def view_profile(request):
-    # Clear stale profile image reference if file no longer exists on disk
+def upload_profile_image_ajax(request):
+    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
     user = request.user
-    if user.profile_image and user.profile_image.name:
+    image = request.FILES.get('profile_image')
+    if not image:
+        return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if image.content_type not in allowed_types:
+        return JsonResponse({'success': False, 'error': 'Invalid file type. Use JPEG, PNG, GIF or WebP.'}, status=400)
+    if image.size > 5 * 1024 * 1024:
+        return JsonResponse({'success': False, 'error': 'File too large. Max 5MB.'}, status=400)
+    try:
+        import os
+        # Delete old image
+        if user.profile_image:
+            try:
+                if hasattr(user.profile_image, 'public_id'):
+                    import cloudinary.uploader
+                    cloudinary.uploader.destroy(user.profile_image.public_id)
+                else:
+                    old_path = user.profile_image.path
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+            except Exception:
+                pass
+        user.profile_image = image
+        user.save()
+        user.refresh_from_db()
+        # Build URL — Cloudinary returns a full https URL; local returns a relative path
+        img_field = user.profile_image
+        if hasattr(img_field, 'url'):
+            image_url = img_field.url
+        else:
+            image_url = str(img_field)
+        return JsonResponse({'success': True, 'image_url': image_url})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def view_profile(request):
+    # Clear stale profile image reference only for local storage (not Cloudinary)
+    user = request.user
+    if user.profile_image and not hasattr(user.profile_image, 'public_id'):
         import os
         try:
-            if not os.path.exists(user.profile_image.path):
+            path = user.profile_image.path
+            if not os.path.exists(path):
                 user.profile_image = None
                 user.save(update_fields=['profile_image'])
         except Exception:
@@ -281,11 +339,15 @@ def view_profile(request):
         profile_image = request.FILES.get('profile_image')
         if profile_image:
             import os
-            if user.profile_image and user.profile_image.name:
+            if user.profile_image:
                 try:
-                    old_path = user.profile_image.path
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
+                    if hasattr(user.profile_image, 'public_id'):
+                        import cloudinary.uploader
+                        cloudinary.uploader.destroy(user.profile_image.public_id)
+                    else:
+                        old_path = user.profile_image.path
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
                 except Exception:
                     pass
             user.profile_image = profile_image

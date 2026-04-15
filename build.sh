@@ -5,6 +5,22 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --fake-initial --noinput
 
+# Clear stale profile image DB references (Render ephemeral filesystem wipes files on deploy)
+python manage.py shell -c "
+from vision.models import UserProfile
+import os
+for u in UserProfile.objects.exclude(profile_image='').exclude(profile_image=None):
+    try:
+        if not os.path.exists(u.profile_image.path):
+            u.profile_image = None
+            u.save(update_fields=['profile_image'])
+            print(f'Cleared stale image for user: {u.username}')
+    except Exception:
+        u.profile_image = None
+        u.save(update_fields=['profile_image'])
+        print(f'Cleared broken image for user: {u.username}')
+"
+
 # Download YOLOv3-tiny weights at build time
 if [ ! -f "yolov3-tiny.weights" ]; then
     echo "Downloading YOLOv3-tiny weights..."

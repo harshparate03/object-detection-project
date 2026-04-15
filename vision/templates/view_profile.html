@@ -1,10 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-<meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 {% load static %}
 {% include 'includes/head.html' with page_title="View Profile" %}
+<style>
+    .profile-img-wrapper {
+        position: relative;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .profile-img-wrapper img {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #ba42ff;
+        display: block;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .profile-img-wrapper img:hover { opacity: 0.85; }
+    .profile-img-wrapper .camera-btn {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: #ba42ff;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px solid #1a1a2e;
+        transition: background 0.2s;
+    }
+    .profile-img-wrapper .camera-btn:hover { background: #9b30e0; }
+    .profile-img-wrapper .camera-btn i { font-size: 12px; color: #fff; }
+
+    .profile-img-actions { display: flex; flex-direction: column; gap: 8px; }
+
+    .btn-remove-img {
+        background: transparent !important;
+        border: 2px solid #e74c3c !important;
+        color: #e74c3c !important;
+        text-align: center;
+    }
+    .btn-remove-img:hover {
+        background: #e74c3c !important;
+        color: #fff !important;
+    }
+
+    /* Upload progress bar */
+    .upload-progress {
+        display: none;
+        margin-top: 8px;
+        width: 110px;
+    }
+    .upload-progress .bar {
+        height: 4px;
+        background: linear-gradient(90deg, #ba42ff, #00e1ff);
+        border-radius: 2px;
+        animation: progress-anim 1.2s ease-in-out infinite;
+        width: 100%;
+    }
+    @keyframes progress-anim {
+        0%   { opacity: 1; }
+        50%  { opacity: 0.4; }
+        100% { opacity: 1; }
+    }
+
+    /* Confirm modal */
+    .confirm-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    .confirm-overlay.active { display: flex; }
+    .confirm-box {
+        background: #1a1a2e;
+        border: 1px solid #ba42ff44;
+        border-radius: 12px;
+        padding: 32px 28px;
+        max-width: 360px;
+        width: 90%;
+        text-align: center;
+    }
+    .confirm-box h5 { color: #fff; margin-bottom: 10px; }
+    .confirm-box p  { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+    .confirm-box .btn-group-confirm { display: flex; gap: 12px; justify-content: center; }
+
+    /* Toast notification */
+    .profile-toast {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #fff;
+        z-index: 10000;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.3s, transform 0.3s;
+        pointer-events: none;
+    }
+    .profile-toast.show { opacity: 1; transform: translateY(0); }
+    .profile-toast.success { background: #27ae60; }
+    .profile-toast.error   { background: #e74c3c; }
+</style>
 <body>
     {% include 'includes/header.html' %}
+
     <div class="single-settings-box profile-details-box top-flashlight light-xl leftside overflow-hidden">
         <div class="profile-details-tab">
             <div class="advance-tab-button mb--30">
@@ -20,17 +132,19 @@
                             aria-selected="false"><span class="title">Delete Account</span></a></li>
                 </ul>
             </div>
+
             <div class="tab-content">
                 <div class="tab-pane fade active show" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+
                     {% if messages %}
                     {% for message in messages %}
-                    <p style="color: green;">{{ message }}</p>
+                    <p style="color: {% if 'error' in message.tags %}#e74c3c{% else %}#27ae60{% endif %}; margin-bottom: 12px;">{{ message }}</p>
                     {% endfor %}
                     {% endif %}
 
                     <form class="rbt-profile-row rbt-default-form row row--15" method="POST"
-                        enctype="multipart/form-data">
-                        {% csrf_token %} <!-- CSRF token for security -->
+                        enctype="multipart/form-data" id="profile-form">
+                        {% csrf_token %}
 
                         <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                             <div class="form-group">
@@ -57,46 +171,51 @@
                             </div>
                         </div>
 
-                        <!-- Profile Image Upload -->
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+                        <!-- Profile Image Section -->
+                        <div class="col-12">
                             <div class="form-group">
-                                <label for="profile_image">Profile Image</label>
-                                <div style="margin-top: 12px; display: flex; align-items: center; gap: 20px;">
-                                    <!-- Profile image with camera overlay -->
-                                    <div style="position: relative; display: inline-block; flex-shrink: 0;">
-                                        <img id="current_image"
-                                            src="{% if user.profile_image and user.profile_image.name %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
-                                            alt="Profile Image"
-                                            onclick="document.getElementById('profile_image').click();"
-                                            style="cursor:pointer; width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid #ba42ff; display:block;">
-                                        <span onclick="document.getElementById('profile_image').click();"
-                                            title="Change photo"
-                                            style="position:absolute; bottom:4px; right:4px; background:#ba42ff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                                            <i class="feather-camera" style="font-size:12px; color:white;"></i>
-                                        </span>
+                                <label>Profile Picture</label>
+                                <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 22px; flex-wrap: wrap;">
+
+                                    <div>
+                                        <div class="profile-img-wrapper" onclick="document.getElementById('profile_image_input').click();" title="Click to change photo">
+                                            <img id="profile-preview"
+                                                src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                                alt="Profile Picture"
+                                                data-default="{% static 'images/default.jpg' %}"
+                                                onerror="this.src='{% static 'images/default.jpg' %}'">
+                                            <span class="camera-btn">
+                                                <i class="feather-camera"></i>
+                                            </span>
+                                        </div>
+                                        <div class="upload-progress" id="upload-progress">
+                                            <div class="bar"></div>
+                                        </div>
                                     </div>
-                                    <!-- Action buttons -->
-                                    <div style="display:flex; flex-direction:column; gap:8px;">
-                                        <button type="button" class="btn-default btn-small"
-                                            onclick="document.getElementById('profile_image').click()">
-                                            <i class="feather-upload" style="margin-right:5px;"></i>Change Photo
+
+                                    <div class="profile-img-actions" style="padding-top: 8px;">
+                                        <button type="button" class="btn-default btn-small" onclick="document.getElementById('profile_image_input').click()">
+                                            <i class="feather-upload" style="margin-right:5px;"></i>
+                                            {% if user.profile_image and user.profile_image.name %}Update Photo{% else %}Upload Photo{% endif %}
                                         </button>
-                                        {% if user.profile_image and user.profile_image.name %}
-                                        <a href="{% url 'remove_profile_image' %}"
-                                            onclick="return confirm('Remove profile picture? This cannot be undone.')"
-                                            class="btn-default btn-small"
-                                            style="background:transparent; border:2px solid #e74c3c; color:#e74c3c; text-align:center;">
-                                            <i class="feather-trash-2" style="margin-right:5px;"></i>Remove
-                                        </a>
-                                        {% endif %}
+
+                                        <button type="button" id="remove-btn" class="btn-default btn-small btn-remove-img"
+                                            {% if not user.profile_image %}style="display:none;"{% endif %}
+                                            onclick="showRemoveConfirm()">
+                                            <i class="feather-trash-2" style="margin-right:5px;"></i>Remove Photo
+                                        </button>
+
+                                        <p style="font-size:12px; color:#888; margin:4px 0 0; max-width:180px;">
+                                            JPG, PNG, GIF or WebP · Max 5MB
+                                        </p>
                                     </div>
                                 </div>
-                                <input id="profile_image" name="profile_image" type="file" accept="image/*"
-                                    style="display:none;" onchange="previewImage(event)">
+
+                                <!-- Hidden file input — AJAX only, not submitted with form -->
+                                <input id="profile_image_input" type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
                             </div>
                         </div>
 
-                        <!-- Update Info Button -->
                         <div class="col-12 mt--20">
                             <div class="form-group mb--0">
                                 <button type="submit" class="btn-default">Update Info</button>
@@ -104,59 +223,184 @@
                         </div>
                     </form>
                 </div>
+
                 <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
                     <form action="#" class="rbt-profile-row rbt-default-form row row--15">
                         <div class="col-12">
-                            <div class="form-group"><label for="currentpassword">Current Password</label><input
-                                    id="currentpassword" type="password" placeholder="Current Password"></div>
+                            <div class="form-group"><label for="currentpassword">Current Password</label><input id="currentpassword" type="password" placeholder="Current Password"></div>
                         </div>
                         <div class="col-12">
-                            <div class="form-group"><label for="newpassword">New Password</label><input id="newpassword"
-                                    type="password" placeholder="New Password"></div>
+                            <div class="form-group"><label for="newpassword">New Password</label><input id="newpassword" type="password" placeholder="New Password"></div>
                         </div>
                         <div class="col-12">
-                            <div class="form-group"><label for="retypenewpassword">Re-type New Password</label><input
-                                    id="retypenewpassword" type="password" placeholder="Re-type New Password"></div>
+                            <div class="form-group"><label for="retypenewpassword">Re-type New Password</label><input id="retypenewpassword" type="password" placeholder="Re-type New Password"></div>
                         </div>
                         <div class="col-12 mt--20">
                             <div class="form-group mb--0"><a class="btn-default" href="#">Update Password</a></div>
                         </div>
                     </form>
                 </div>
+
                 <div class="tab-pane fade" id="delaccount" role="tabpanel" aria-labelledby="del-account-tab">
                     <form action="#" class="rbt-profile-row rbt-default-form row row--15">
                         <div class="col-11 text-Center">
-                            <p class="mb--20"><strong>Warning: </strong>Deleting your account will permanently erase all
-                                your data and cannot be reversed. This includes your profile, conversations, comments,
-                                and
-                                any other info linked to your account. Are you sure you want to go ahead with deleting
-                                your
-                                account? Enter your password to confirm.</p>
+                            <p class="mb--20"><strong>Warning: </strong>Deleting your account will permanently erase all your data and cannot be reversed. Are you sure you want to go ahead? Enter your password to confirm.</p>
                         </div>
                         <div class="col-12">
-                            <div class="form-group"><label for="enterpassword">Your Password</label><input
-                                    id="enterpassword" type="password" placeholder="Current Password"></div>
+                            <div class="form-group"><label for="enterpassword">Your Password</label><input id="enterpassword" type="password" placeholder="Current Password"></div>
                         </div>
                         <div class="col-12 mt--20">
-                            <div class="form-group mb--0"><a class="btn-default" href="#"><i
-                                        class="feather-trash-2"></i>
-                                    Delete Accont</a></div>
+                            <div class="form-group mb--0"><a class="btn-default" href="#"><i class="feather-trash-2"></i> Delete Account</a></div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Remove Confirmation Modal -->
+    <div class="confirm-overlay" id="confirm-overlay">
+        <div class="confirm-box">
+            <h5>Remove Profile Picture?</h5>
+            <p>This will permanently delete your current photo and revert to the default placeholder.</p>
+            <div class="btn-group-confirm">
+                <button class="btn-default btn-small btn-remove-img" onclick="confirmRemove()">
+                    <i class="feather-trash-2" style="margin-right:5px;"></i>Yes, Remove
+                </button>
+                <button class="btn-default btn-small" onclick="hideRemoveConfirm()" style="background:transparent; border:2px solid #555; color:#ccc;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="profile-toast" id="profile-toast"></div>
+
     {% include 'includes/footer.html' %}
+
     <script>
-        function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('current_image').src = reader.result;
-            };
-            reader.readAsDataURL(event.target.files[0]);
+        const DEFAULT_IMG = "{% static 'images/default.jpg' %}";
+        const UPLOAD_URL  = "{% url 'upload_profile_image_ajax' %}";
+        const REMOVE_URL  = "{% url 'remove_profile_image' %}";
+        const CSRF_TOKEN  = "{{ csrf_token }}";
+
+        function getCsrfToken() {
+            return CSRF_TOKEN;
         }
+
+        // ── Toast ──────────────────────────────────────────────
+        function showToast(msg, type) {
+            const t = document.getElementById('profile-toast');
+            t.textContent = msg;
+            t.className = 'profile-toast ' + type + ' show';
+            setTimeout(() => { t.className = 'profile-toast ' + type; }, 3500);
+        }
+
+        // ── Sync all profile images on the page ────────────────
+        function syncAllProfileImages(url) {
+            document.querySelectorAll(
+                '#profile-preview, .admin-img img, .admin-thumbnail img, .rbt-admin-profile img'
+            ).forEach(img => {
+                img.src = url + '?t=' + Date.now();
+            });
+        }
+
+        // ── Handle file selection → AJAX upload ───────────────
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowed.includes(file.type)) {
+                showToast('Invalid file type. Use JPEG, PNG, GIF or WebP.', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('File too large. Maximum size is 5MB.', 'error');
+                return;
+            }
+
+            // Instant local preview
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('profile-preview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Show progress
+            document.getElementById('upload-progress').style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('profile_image', file);
+
+            fetch(UPLOAD_URL, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('upload-progress').style.display = 'none';
+                if (data.success) {
+                    syncAllProfileImages(data.image_url);
+                    document.getElementById('remove-btn').style.display = '';
+                    // Update upload button text
+                    document.querySelector('.profile-img-actions .btn-default:first-child').innerHTML =
+                        '<i class="feather-upload" style="margin-right:5px;"></i>Update Photo';
+                    showToast('Profile picture updated!', 'success');
+                } else {
+                    // Revert preview on error
+                    document.getElementById('profile-preview').src = DEFAULT_IMG;
+                    showToast(data.error || 'Upload failed. Please try again.', 'error');
+                }
+            })
+            .catch(() => {
+                document.getElementById('upload-progress').style.display = 'none';
+                document.getElementById('profile-preview').src = DEFAULT_IMG;
+                showToast('Upload failed. Check your connection.', 'error');
+            });
+
+            // Reset input so same file can be re-selected
+            event.target.value = '';
+        }
+
+        // ── Remove confirmation modal ──────────────────────────
+        function showRemoveConfirm() {
+            document.getElementById('confirm-overlay').classList.add('active');
+        }
+        function hideRemoveConfirm() {
+            document.getElementById('confirm-overlay').classList.remove('active');
+        }
+
+        function confirmRemove() {
+            hideRemoveConfirm();
+
+            fetch(REMOVE_URL, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    syncAllProfileImages(data.default_url);
+                    document.getElementById('remove-btn').style.display = 'none';
+                    document.querySelector('.profile-img-actions .btn-default:first-child').innerHTML =
+                        '<i class="feather-upload" style="margin-right:5px;"></i>Upload Photo';
+                    showToast('Profile picture removed.', 'success');
+                } else {
+                    showToast('Could not remove photo. Please try again.', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Remove failed. Check your connection.', 'error');
+            });
+        }
+
+        // Close modal on overlay click
+        document.getElementById('confirm-overlay').addEventListener('click', function(e) {
+            if (e.target === this) hideRemoveConfirm();
+        });
     </script>
 </body>
-
 </html>
