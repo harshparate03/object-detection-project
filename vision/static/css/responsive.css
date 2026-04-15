@@ -428,8 +428,41 @@ img {
 }
 
 /* ============================================================
-   FOOTER - Responsive
+   WEBCAM BUTTONS - Match Upload Image/Video button size
    ============================================================ */
+#webcam-buttons .btn-default {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    #webcam-buttons {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    #webcam-buttons .btn-default {
+        width: 90%;
+        max-width: 300px;
+        text-align: center;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    #webcam-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #webcam-buttons .btn-default {
+        flex: 1 1 auto;
+        max-width: 180px;
+    }
+}
 @media (max-width: 480px) {
     .copyright-area .row {
         flex-direction: column;
