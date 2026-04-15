@@ -33,7 +33,7 @@
                             <div class="rbt-user ml--0">
                                 <a class="admin-img" href="#">
                                     <img alt="User" width="920" height="920" style="color:transparent"
-                                        src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                        src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
                                         onerror="this.src='{% static 'images/default.jpg' %}'" />
                                 </a>
                             </div>
@@ -44,7 +44,7 @@
                                         <div class="admin-thumbnail">
                                             <img alt="User Images" width="920" height="920" data-nimg="1"
                                                 style="color:transparent"
-                                                src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                                src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
                                                 onerror="this.src='{% static 'images/default.jpg' %}'" />
                                         </div>
                                         <div class="admin-info profile-image-info">

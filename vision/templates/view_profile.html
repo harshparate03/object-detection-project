@@ -180,7 +180,7 @@
                                     <div>
                                         <div class="profile-img-wrapper" onclick="document.getElementById('profile_image_input').click();" title="Click to change photo">
                                             <img id="profile-preview"
-                                                src="{% if user.profile_image %}{{ user.profile_image.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                                                src="{% if user.profile_image %}{{ user.profile_image }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
                                                 alt="Profile Picture"
                                                 data-default="{% static 'images/default.jpg' %}"
                                                 onerror="this.src='{% static 'images/default.jpg' %}'">
@@ -196,7 +196,7 @@
                                     <div class="profile-img-actions" style="padding-top: 8px;">
                                         <button type="button" class="btn-default btn-small" onclick="document.getElementById('profile_image_input').click()">
                                             <i class="feather-upload" style="margin-right:5px;"></i>
-                                            {% if user.profile_image and user.profile_image.name %}Update Photo{% else %}Upload Photo{% endif %}
+                                            {% if user.profile_image %}Update Photo{% else %}Upload Photo{% endif %}
                                         </button>
 
                                         <button type="button" id="remove-btn" class="btn-default btn-small btn-remove-img"

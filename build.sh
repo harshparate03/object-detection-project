@@ -3,10 +3,7 @@ set -o errexit
 
 pip install -r requirements.txt
 python manage.py collectstatic --noinput
-python manage.py migrate --fake-initial --noinput
-
-# Clear stale profile image DB references (Render ephemeral filesystem wipes files on deploy)
-python manage.py clear_stale_images
+python manage.py migrate --noinput
 
 # Download YOLOv3-tiny weights at build time
 if [ ! -f "yolov3-tiny.weights" ]; then

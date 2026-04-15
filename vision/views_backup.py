@@ -194,29 +194,38 @@ def password_reset(request):
         if new_password != confirm_password:
             return render(request, 'password_reset.html', {'error': 'Passwords do not match.'})
         
+        # Validate the new password
         try:
             validate_password(new_password)
         except ValidationError as e:
-            return render(request, 'password_reset.html', {'error': ' '.join(e.messages)})
+            return render(request, 'password_reset.html', {'error': e.messages})
         
+        # Retrieve the user from the session
         user_id = request.session.get('user_id')
         if not user_id:
-            return redirect('signin')
+            return redirect('signin')  # Redirect to sign-in if the session is missing
         
         try:
-            from .models import UserProfile
-            user = UserProfile.objects.get(id=user_id)
-        except UserProfile.DoesNotExist:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
             return redirect('signin')
         
-        if check_password(new_password, user.password):
+        # Store the old password hash before updating
+        old_password_hash = user.password
+        
+        # Check if the new password is the same as the old password
+        if check_password(new_password, old_password_hash):
             return render(request, 'password_reset.html', {'error': 'New password cannot be the same as the old password.'})
         
-        user.set_password(new_password)
+        # Update the password
+        user.password = make_password(new_password)
         user.save()
+
+        # Optionally log the user back in
         update_session_auth_hash(request, user)
-        # Show success message with auto-redirect
-        return render(request, 'password_reset.html', {'success': True})
+        
+        messages.success(request, 'Password reset successfully.')
+        return redirect('signin')
     
     return render(request, 'password_reset.html')
 
@@ -230,50 +239,14 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile  # Import the model
 
 @login_required
-def remove_profile_image(request):
-    if request.method != 'POST':
-        return redirect('view_profile')
-    user = request.user
-    user.profile_image = None
-    user.save(update_fields=['profile_image'])
-    from django.http import JsonResponse
-    from django.templatetags.static import static
-    return JsonResponse({'success': True, 'default_url': static('images/default.jpg')})
-
-
-@login_required
-def upload_profile_image_ajax(request):
-    from django.http import JsonResponse
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
-    user = request.user
-    image = request.FILES.get('profile_image')
-    if not image:
-        return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
-    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if image.content_type not in allowed_types:
-        return JsonResponse({'success': False, 'error': 'Invalid file type. Use JPEG, PNG, GIF or WebP.'}, status=400)
-    if image.size > 5 * 1024 * 1024:
-        return JsonResponse({'success': False, 'error': 'File too large. Max 5MB.'}, status=400)
-    try:
-        import base64
-        img_data = base64.b64encode(image.read()).decode('utf-8')
-        data_url = f"data:{image.content_type};base64,{img_data}"
-        user.profile_image = data_url
-        user.save(update_fields=['profile_image'])
-        return JsonResponse({'success': True, 'image_url': data_url})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-
-@login_required
 def view_profile(request):
-    user = request.user
     if request.method == "POST":
+        user = request.user
         new_name = request.POST.get("name")
         new_email = request.POST.get("email")
         new_phone = request.POST.get("phone")
 
+        # Check if email or phone already exists in the database
         if UserProfile.objects.filter(email=new_email).exclude(id=user.id).exists():
             messages.error(request, "This email is already in use.")
             return redirect("view_profile")
@@ -282,12 +255,18 @@ def view_profile(request):
             messages.error(request, "This phone number is already in use.")
             return redirect("view_profile")
 
+        # If no duplicates, update the user profile
         user.name = new_name
         user.email = new_email
         user.phone = new_phone
-        user.save()
+
+        profile_image = request.FILES.get('profile_image')
+        if profile_image:
+            user.profile_image = profile_image  # Update profile image if a new file is uploaded
+        user.save()  # Save the updated user details
         messages.success(request, "Profile updated successfully!")
-        return redirect("view_profile")
+
+        return redirect("view_profile")  # Redirect to profile page after update
 
     return render(request, "view_profile.html")
 
@@ -553,9 +532,6 @@ def detect_with_roboflow(image):
 
     return annotated, detections
 
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
         try:
