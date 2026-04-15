@@ -197,7 +197,7 @@ def password_reset(request):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            return render(request, 'password_reset.html', {'error': e.messages})
+            return render(request, 'password_reset.html', {'error': ' '.join(e.messages)})
         
         user_id = request.session.get('user_id')
         if not user_id:
@@ -215,8 +215,8 @@ def password_reset(request):
         user.set_password(new_password)
         user.save()
         update_session_auth_hash(request, user)
-        messages.success(request, 'Password reset successfully.')
-        return redirect('signin')
+        # Show success message with auto-redirect
+        return render(request, 'password_reset.html', {'success': True})
     
     return render(request, 'password_reset.html')
 
