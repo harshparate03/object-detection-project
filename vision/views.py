@@ -806,10 +806,11 @@ def upload_video(request):
 
             cap.release()
 
-            # Build annotated mp4 from frames
+            # Build annotated mp4 in memory and return as base64 data URL
             import numpy as np
             import base64 as _b64v
-            video_url = None
+            import tempfile as _tmpfile
+            video_data_url = None
             if annotated_frames:
                 try:
                     first_data = annotated_frames[0].split(',')[1]
@@ -817,22 +818,28 @@ def upload_video(request):
                     if first_img is not None:
                         out_fps = min(fps, 10)
                         fh, fw = first_img.shape[:2]
-                        output_folder = os.path.join(settings.MEDIA_ROOT, 'outputs')
-                        os.makedirs(output_folder, exist_ok=True)
-                        out_filename = 'annotated_' + os.path.splitext(os.path.basename(tmp_path))[0] + '.mp4'
-                        out_path = os.path.join(output_folder, out_filename)
-                        # Try avc1 (H.264) first for browser compatibility, fallback to mp4v
-                        fourcc = cv2.VideoWriter_fourcc(*'avc1')
-                        writer = cv2.VideoWriter(out_path, fourcc, out_fps, (fw, fh))
-                        if not writer.isOpened():
-                            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                            writer = cv2.VideoWriter(out_path, fourcc, out_fps, (fw, fh))
+
+                        # Decode frames to RGB numpy arrays
+                        frame_arrays = []
                         for fb64 in annotated_frames:
                             img = cv2.imdecode(np.frombuffer(_b64v.b64decode(fb64.split(',')[1]), np.uint8), cv2.IMREAD_COLOR)
                             if img is not None:
-                                writer.write(img)
-                        writer.release()
-                        video_url = settings.MEDIA_URL + 'outputs/' + out_filename
+                                frame_arrays.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+                        if frame_arrays:
+                            import imageio.v3 as iio
+                            tmp_out = _tmpfile.mktemp(suffix='.mp4')
+                            iio.imwrite(
+                                tmp_out,
+                                frame_arrays,
+                                fps=out_fps,
+                                codec='libx264',
+                                output_params=['-pix_fmt', 'yuv420p', '-movflags', '+faststart']
+                            )
+                            with open(tmp_out, 'rb') as vf:
+                                video_b64 = _b64v.b64encode(vf.read()).decode('utf-8')
+                            os.unlink(tmp_out)
+                            video_data_url = 'data:video/mp4;base64,' + video_b64
                 except Exception:
                     pass
 
@@ -843,7 +850,7 @@ def upload_video(request):
                 'status': 'success',
                 'frames': annotated_frames,
                 'fps': min(fps, 10),
-                'video_url': video_url,
+                'video_url': video_data_url,
                 'detected_objects': detected_objects
             })
 
