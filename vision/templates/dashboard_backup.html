@@ -546,19 +546,9 @@
                             if (slide) slide.src = _vp.frames[_vp.idx];
                             vpUpdateUI();
                         }
-                        function vpSeekHover(e) {
-                            if (!_vp.frames.length) return;
-                            var bar = document.getElementById('vp-progress-bg');
-                            if (!bar) return;
-                            var rect = bar.getBoundingClientRect();
-                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            var tip = document.getElementById('vp-tooltip');
-                            if (tip) { tip.style.left = (pct*100)+'%'; tip.textContent = vpFmtTime(pct*(_vp.frames.length-1)/_vp.fps); tip.style.opacity='1'; }
-                        }
-
                         function vpSeekStart(e) { _vp.seeking = true; vpSeekToPos(e); }
-                        function vpSeekMove(e)  { vpSeekHover(e); if (_vp.seeking) vpSeekToPos(e); }
-                        function vpSeekEnd(e)   { _vp.seeking = false; var tip = document.getElementById('vp-tooltip'); if (tip) tip.style.opacity='0'; }
+                        function vpSeekMove(e)  { if (_vp.seeking) vpSeekToPos(e); }
+                        function vpSeekEnd(e)   { _vp.seeking = false; }
                         function vpSetVolume(v) {
                             _vp.volume = parseInt(v);
                             _vp.muted = _vp.volume === 0;
