@@ -360,10 +360,13 @@
                         </div>
 
                         <!-- Placeholder for Annotated Image -->
-                        <div id="annotated-image-container" style="margin-top: 20px; display: none; text-align: center; position: relative;">
-                            <button onclick="closeImageResult()" style="position: absolute; top: 0; right: 0; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">&times;</button>
+                        <div id="annotated-image-container"
+                            style="margin-top: 20px; display: none; text-align: center; position: relative;">
+                            <button onclick="closeImageResult()"
+                                style="position: absolute; top: 0; right: 0; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 10;">&times;</button>
                             <h4>Processed Image:</h4>
-                            <img id="annotated-image" src="" alt="Annotated Image" style="max-width: 80%; height: auto; border: 2px solid white; border-radius: 10px;" />
+                            <img id="annotated-image" src="" alt="Annotated Image"
+                                style="max-width: 80%; height: auto; border: 2px solid white; border-radius: 10px;" />
                         </div>
 
                         <!-- Detected Objects List -->
@@ -387,37 +390,54 @@
                         </div>
 
                         <!-- Processed Video Player -->
-                        <div id="annotated-video-container" style="display:none; margin-top:24px; width:100%; max-width:920px; margin-left:auto; margin-right:auto;">
-                            <div style="background:#111827; border:1px solid #374151; border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+                        <div id="annotated-video-container"
+                            style="display:none; margin-top:24px; width:100%; max-width:920px; margin-left:auto; margin-right:auto;">
+                            <div
+                                style="background:#111827; border:1px solid #374151; border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
 
                                 <!-- Header -->
-                                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid #1f2937;">
-                                    <span style="color:#9ca3af; font-size:13px; font-weight:600;">&#127909; PROCESSED VIDEO</span>
-                                    <button onclick="closeVideoResult()" title="Close" style="background:none; border:1px solid #374151; color:#9ca3af; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px;">&times;</button>
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid #1f2937;">
+                                    <span style="color:#9ca3af; font-size:13px; font-weight:600;">&#127909; PROCESSED
+                                        VIDEO</span>
+                                    <button onclick="closeVideoResult()" title="Close"
+                                        style="background:none; border:1px solid #374151; color:#9ca3af; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px;">&times;</button>
                                 </div>
 
                                 <!-- Frame display -->
-                                <div style="background:#000; min-height:180px; display:flex; align-items:center; justify-content:center; position:relative;">
-                                    <img id="video-slideshow" src="" alt="Video frame" style="width:100%; max-height:480px; object-fit:contain; display:none;">
-                                    <div id="vp-error" style="display:none; color:#ef4444; font-size:14px; padding:20px;">&#9888; Could not load video.</div>
+                                <div
+                                    style="background:#000; min-height:180px; display:flex; align-items:center; justify-content:center; position:relative;">
+                                    <video id="vp-video"
+                                        style="width:100%; max-height:480px; object-fit:contain; display:none;"
+                                        playsinline>
+                                        Your browser does not support video.
+                                    </video>
+                                    <img id="video-slideshow" src="" alt="Video frame"
+                                        style="width:100%; max-height:480px; object-fit:contain; display:none;">
+                                    <div id="vp-error"
+                                        style="display:none; color:#ef4444; font-size:14px; padding:20px;">&#9888; Could
+                                        not load video.</div>
                                 </div>
 
                                 <!-- Controls -->
                                 <div style="padding:10px 16px 14px; background:#111827;">
 
                                     <!-- Progress bar -->
-                                    <div id="vp-seek-area" style="padding:8px 0; cursor:pointer; position:relative;"
-                                        onmousedown="vpSeekStart(event)" onmousemove="vpSeekMove(event)"
-                                        onmouseup="vpSeekEnd(event)"
-                                        onmouseleave="vpSeekEnd(event); document.getElementById('vp-thumb').style.opacity='0'; document.getElementById('vp-tooltip').style.opacity='0';"
-                                        onmouseenter="document.getElementById('vp-thumb').style.opacity='1';">
-                                        <div id="vp-progress-bg" style="background:#374151; border-radius:99px; height:4px; position:relative; transition:height 0.15s;"
-                                            onmouseenter="this.style.height='6px'" onmouseleave="this.style.height='4px'">
-                                            <div id="vp-buffered-fill" style="position:absolute; height:100%; background:#6b7280; border-radius:99px; width:0%; pointer-events:none;"></div>
-                                            <div id="vp-progress-fill" style="position:absolute; height:100%; background:linear-gradient(90deg,#8b5cf6,#06b6d4); border-radius:99px; width:0%; pointer-events:none;"></div>
-                                            <div id="vp-thumb" style="position:absolute; top:50%; left:0%; transform:translate(-50%,-50%); width:13px; height:13px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 4px rgba(0,0,0,0.6); opacity:0; transition:opacity 0.15s;"></div>
+                                    <div id="vp-seek-area" style="padding:8px 0; cursor:pointer; position:relative;">
+                                        <div id="vp-progress-bg" style="background:#374151; border-radius:99px; height:4px; position:relative; transition:height 0.15s;">
+                                            <div id="vp-buffered-fill"
+                                                style="position:absolute; height:100%; background:#6b7280; border-radius:99px; width:0%; pointer-events:none;">
+                                            </div>
+                                            <div id="vp-progress-fill"
+                                                style="position:absolute; height:100%; background:linear-gradient(90deg,#8b5cf6,#06b6d4); border-radius:99px; width:0%; pointer-events:none;">
+                                            </div>
+                                            <div id="vp-thumb"
+                                                style="position:absolute; top:50%; left:0%; transform:translate(-50%,-50%); width:13px; height:13px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 4px rgba(0,0,0,0.6); opacity:0; transition:opacity 0.15s;">
+                                            </div>
                                         </div>
-                                        <div id="vp-tooltip" style="position:absolute; top:-28px; background:rgba(0,0,0,0.8); color:#fff; padding:2px 7px; font-size:11px; border-radius:5px; pointer-events:none; opacity:0; transform:translateX(-50%); white-space:nowrap;">0:00</div>
+                                        <div id="vp-tooltip"
+                                            style="position:absolute; top:-34px; left:0; background:rgba(0,0,0,0.85); color:#fff; padding:3px 8px; font-size:11px; font-weight:600; border-radius:5px; pointer-events:none; opacity:0; transition:opacity 0.1s; white-space:nowrap; transform:translateX(-50%);">
+                                            0:00</div>
                                     </div>
 
                                     <!-- Buttons row -->
@@ -427,27 +447,26 @@
                                             style="background:#8b5cf6; border:none; color:#fff; border-radius:50%; width:36px; height:36px; font-size:15px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;">&#9654;</button>
                                         <!-- Skip back -->
                                         <button onclick="vpSkip(-10)" title="-10s"
-                                            style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; white-space:nowrap;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='none'">&#9194; 10s</button>
+                                            style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; white-space:nowrap;"
+                                            onmouseover="this.style.background='#1f2937'"
+                                            onmouseout="this.style.background='none'">&#171; 10s</button>
                                         <!-- Skip forward -->
                                         <button onclick="vpSkip(10)" title="+10s"
-                                            style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; white-space:nowrap;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='none'">10s &#9193;</button>
+                                            style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; white-space:nowrap;"
+                                            onmouseover="this.style.background='#1f2937'"
+                                            onmouseout="this.style.background='none'">10s &#187;</button>
                                         <!-- Time -->
-                                        <span id="vp-time" style="color:#d1d5db; font-size:12px; font-family:monospace; white-space:nowrap;">0:00 / 0:00</span>
+                                        <span id="vp-time"
+                                            style="color:#d1d5db; font-size:12px; font-family:monospace; white-space:nowrap;">0:00
+                                            / 0:00</span>
 
                                         <div style="flex:1;"></div>
 
-                                        <!-- Volume -->
-                                        <div style="display:flex; align-items:center; gap:5px;">
-                                            <button id="vp-mute-btn" onclick="vpToggleMute()" title="Mute / Unmute"
-                                                style="background:none; border:none; color:#9ca3af; font-size:16px; cursor:pointer; padding:0; line-height:1;">&#128266;</button>
-                                            <input id="vp-volume" type="range" min="0" max="100" value="80"
-                                                oninput="vpSetVolume(this.value)"
-                                                style="width:72px; accent-color:#8b5cf6; cursor:pointer;">
-                                        </div>
+
 
                                         <!-- Speed -->
                                         <select id="vp-speed" onchange="vpSetSpeed(this.value)" title="Playback speed"
-                                            style="background:#1f2937; border:1px solid #374151; color:#d1d5db; border-radius:6px; padding:3px 7px; font-size:12px; cursor:pointer;">
+                                            style="background:#1f2937; border:1px solid #374151; color:#d1d5db; border-radius:6px; padding:2px 4px; font-size:11px; cursor:pointer; max-width:58px;">
                                             <option value="0.25">0.25x</option>
                                             <option value="0.5">0.5x</option>
                                             <option value="1" selected>1x</option>
@@ -458,7 +477,8 @@
 
                                         <!-- Download -->
                                         <button id="vp-download-btn" onclick="vpDownload()" title="Download video"
-                                            style="background:none; border:1px solid #374151; color:#9ca3af; border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;">&#11015; Download</button>
+                                            style="background:none; border:1px solid #374151; color:#9ca3af; border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;">&#11015;
+                                            Download</button>
                                     </div>
                                 </div>
                             </div>
@@ -487,34 +507,84 @@
                             document.getElementById('generate-report-button').style.display = 'none';
                         }
 
-                        var _vp = { frames:[], fps:5, idx:0, playing:false, timer:null, seeking:false, speed:1, volume:80, muted:false };
+                        var _vp = { mode: 'video', frames: [], fps: 5, idx: 0, playing: false, timer: null, seeking: false, speed: 1, volume: 80, muted: false };
 
                         function vpFmtTime(sec) {
-                            var m = Math.floor(sec/60), s = Math.floor(sec%60);
-                            return m + ':' + (s<10?'0':'') + s;
+                            if (!sec || isNaN(sec)) return '0:00';
+                            var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+                            return m + ':' + (s < 10 ? '0' : '') + s;
                         }
 
+                        function vpGetVideo() { return document.getElementById('vp-video'); }
+
                         function vpUpdateUI() {
-                            var total = _vp.frames.length;
-                            var pct = total > 1 ? (_vp.idx / (total-1)) * 100 : 0;
+                            var vid = vpGetVideo();
+                            var pct = 0, cur = 0, total = 0;
+                            if (_vp.mode === 'video' && vid && vid.duration) {
+                                cur = vid.currentTime; total = vid.duration;
+                                pct = (cur / total) * 100;
+                            } else if (_vp.mode === 'frames' && _vp.frames.length > 1) {
+                                cur = _vp.idx / _vp.fps;
+                                total = (_vp.frames.length - 1) / _vp.fps;
+                                pct = (_vp.idx / (_vp.frames.length - 1)) * 100;
+                            }
                             var fill = document.getElementById('vp-progress-fill');
                             var thumb = document.getElementById('vp-thumb');
-                            var time  = document.getElementById('vp-time');
-                            if (fill)  fill.style.width = pct + '%';
+                            var buf = document.getElementById('vp-buffered-fill');
+                            var time = document.getElementById('vp-time');
+                            if (fill) fill.style.width = pct + '%';
                             if (thumb) thumb.style.left = pct + '%';
-                            if (time)  time.textContent = vpFmtTime(_vp.idx/_vp.fps) + ' / ' + vpFmtTime((total-1)/_vp.fps);
+                            if (buf) buf.style.width = Math.min(pct + 15, 100) + '%';
+                            if (time) time.textContent = vpFmtTime(cur) + ' / ' + vpFmtTime(total);
+                        }
+
+                        function vpTogglePlay() {
+                            var vid = vpGetVideo();
+                            if (_vp.mode === 'video' && vid) {
+                                if (vid.paused) { vid.play(); } else { vid.pause(); }
+                            } else {
+                                if (!_vp.frames.length) return;
+                                _vp.playing = !_vp.playing;
+                                if (_vp.playing) {
+                                    if (_vp.idx >= _vp.frames.length - 1) _vp.idx = 0;
+                                    vpStartTimer();
+                                } else {
+                                    if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
+                                }
+                            }
+                            vpUpdatePlayBtn();
+                        }
+
+                        function vpUpdatePlayBtn() {
+                            var vid = vpGetVideo();
+                            var btn = document.getElementById('vp-play-btn');
+                            if (!btn) return;
+                            var playing = (_vp.mode === 'video' && vid) ? !vid.paused : _vp.playing;
+                            btn.innerHTML = playing ? '&#9646;&#9646;' : '&#9654;';
+                        }
+
+                        function vpSkip(sec) {
+                            var vid = vpGetVideo();
+                            if (_vp.mode === 'video' && vid) {
+                                vid.currentTime = Math.max(0, Math.min(vid.duration, vid.currentTime + sec));
+                            } else {
+                                var steps = Math.round(sec * _vp.fps);
+                                _vp.idx = Math.max(0, Math.min(_vp.frames.length - 1, _vp.idx + steps));
+                                var slide = document.getElementById('video-slideshow');
+                                if (slide) slide.src = _vp.frames[_vp.idx];
+                                vpUpdateUI();
+                            }
                         }
 
                         function vpStartTimer() {
                             if (_vp.timer) clearInterval(_vp.timer);
-                            _vp.timer = setInterval(function() {
+                            _vp.timer = setInterval(function () {
                                 _vp.idx++;
                                 if (_vp.idx >= _vp.frames.length) {
                                     _vp.idx = _vp.frames.length - 1;
                                     clearInterval(_vp.timer); _vp.timer = null;
                                     _vp.playing = false;
-                                    var b = document.getElementById('vp-play-btn');
-                                    if (b) b.innerHTML = '&#9654;';
+                                    vpUpdatePlayBtn();
                                 }
                                 var slide = document.getElementById('video-slideshow');
                                 if (slide) slide.src = _vp.frames[_vp.idx];
@@ -522,57 +592,99 @@
                             }, 1000 / (_vp.fps * _vp.speed));
                         }
 
-                        function vpTogglePlay() {
-                            if (!_vp.frames.length) return;
-                            _vp.playing = !_vp.playing;
-                            var btn = document.getElementById('vp-play-btn');
-                            if (btn) btn.innerHTML = _vp.playing ? '&#9646;&#9646;' : '&#9654;';
-                            if (_vp.playing) {
-                                if (_vp.idx >= _vp.frames.length - 1) _vp.idx = 0;
-                                vpStartTimer();
-                            } else {
-                                if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
+                        function vpSeekToPos(e) {
+                            var bar = document.getElementById('vp-progress-bg');
+                            if (!bar) return;
+                            var rect = bar.getBoundingClientRect();
+                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                            var vid = vpGetVideo();
+                            if (_vp.mode === 'video' && vid && vid.duration) {
+                                vid.currentTime = pct * vid.duration;
+                            } else if (_vp.frames.length) {
+                                _vp.idx = Math.round(pct * (_vp.frames.length - 1));
+                                var slide = document.getElementById('video-slideshow');
+                                if (slide) slide.src = _vp.frames[_vp.idx];
+                            }
+                            var tip = document.getElementById('vp-tooltip');
+                            var dur = (_vp.mode === 'video' && vid) ? vid.duration : (_vp.frames.length - 1) / _vp.fps;
+                            if (tip) { tip.style.left = (pct * 100) + '%'; tip.textContent = vpFmtTime(pct * dur); tip.style.opacity = '1'; }
+                            vpUpdateUI();
+                        }
+
+                        function vpSeekHover(e) {
+                            var seekArea = document.getElementById('vp-seek-area');
+                            var bar = document.getElementById('vp-progress-bg');
+                            if (!bar || !seekArea) return;
+                            var barRect = bar.getBoundingClientRect();
+                            var areaRect = seekArea.getBoundingClientRect();
+                            var pct = Math.max(0, Math.min(1, (e.clientX - barRect.left) / barRect.width));
+                            var vid = vpGetVideo();
+                            var dur = (_vp.mode === 'video' && vid && vid.duration && !isNaN(vid.duration))
+                                ? vid.duration
+                                : (_vp.frames.length > 1 ? (_vp.frames.length - 1) / _vp.fps : 0);
+                            var tip = document.getElementById('vp-tooltip');
+                            if (tip && dur > 0) {
+                                var leftPx = e.clientX - areaRect.left;
+                                var half = (tip.offsetWidth || 40) / 2;
+                                leftPx = Math.max(half, Math.min(areaRect.width - half, leftPx));
+                                tip.style.left = leftPx + 'px';
+                                tip.style.transform = 'translateX(-50%)';
+                                tip.textContent = vpFmtTime(pct * dur);
+                                tip.style.opacity = '1';
+                            }
+                        }
+                        function vpSeekStart(e) {
+                            e.preventDefault();
+                            _vp.seeking = true;
+                            vpSeekToPos(e);
+                            document.getElementById('vp-progress-bg').style.height = '6px';
+                            document.getElementById('vp-thumb').style.opacity = '1';
+                            document.addEventListener('mousemove', vpSeekDrag);
+                            document.addEventListener('mouseup', vpSeekRelease);
+                        }
+                        function vpSeekDrag(e) {
+                            if (!_vp.seeking) return;
+                            vpSeekToPos(e);
+                            vpSeekHover(e);
+                        }
+                        function vpSeekRelease(e) {
+                            _vp.seeking = false;
+                            document.removeEventListener('mousemove', vpSeekDrag);
+                            document.removeEventListener('mouseup', vpSeekRelease);
+                            document.getElementById('vp-progress-bg').style.height = '4px';
+                            document.getElementById('vp-thumb').style.opacity = '0';
+                            var tip = document.getElementById('vp-tooltip');
+                            if (tip) tip.style.opacity = '0';
+                        }
+                        function vpSeekMove(e) { vpSeekHover(e); }
+                        function vpSeekEnd(e) {
+                            if (!_vp.seeking) {
+                                document.getElementById('vp-progress-bg').style.height = '4px';
+                                document.getElementById('vp-thumb').style.opacity = '0';
+                                var tip = document.getElementById('vp-tooltip');
+                                if (tip) tip.style.opacity = '0';
                             }
                         }
 
-                        function vpSeekToPos(e) {
-                            if (!_vp.frames.length) return;
-                            var bar = document.getElementById('vp-progress-bg');
-                            if (!bar) return;
-                            var rect = bar.getBoundingClientRect();
-                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            _vp.idx = Math.round(pct * (_vp.frames.length - 1));
-                            var slide = document.getElementById('video-slideshow');
-                            if (slide) slide.src = _vp.frames[_vp.idx];
-                            vpUpdateUI();
-                        }
-                        function vpSeekHover(e) {
-                            if (!_vp.frames.length) return;
-                            var bar = document.getElementById('vp-progress-bg');
-                            if (!bar) return;
-                            var rect = bar.getBoundingClientRect();
-                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            var tip = document.getElementById('vp-tooltip');
-                            if (tip) { tip.style.left = (pct*100)+'%'; tip.textContent = vpFmtTime(pct*(_vp.frames.length-1)/_vp.fps); tip.style.opacity='1'; }
-                        }
-
-                        function vpSeekStart(e) { _vp.seeking = true; vpSeekToPos(e); }
-                        function vpSeekMove(e)  { vpSeekHover(e); if (_vp.seeking) vpSeekToPos(e); }
-                        function vpSeekEnd(e)   { _vp.seeking = false; var tip = document.getElementById('vp-tooltip'); if (tip) tip.style.opacity='0'; }
                         function vpSetVolume(v) {
                             _vp.volume = parseInt(v);
                             _vp.muted = _vp.volume === 0;
+                            var vid = vpGetVideo();
+                            if (vid) { vid.volume = _vp.muted ? 0 : _vp.volume / 100; vid.muted = false; }
                             vpUpdateVolumeIcon();
                         }
 
                         function vpToggleMute() {
                             _vp.muted = !_vp.muted;
+                            var vid = vpGetVideo();
                             var slider = document.getElementById('vp-volume');
                             if (_vp.muted) {
                                 if (slider) slider.value = 0;
+                                if (vid) vid.volume = 0;
                             } else {
                                 if (_vp.volume === 0) _vp.volume = 80;
                                 if (slider) slider.value = _vp.volume;
+                                if (vid) vid.volume = _vp.volume / 100;
                             }
                             vpUpdateVolumeIcon();
                         }
@@ -586,16 +698,91 @@
 
                         function vpSetSpeed(v) {
                             _vp.speed = parseFloat(v);
-                            if (_vp.playing) vpStartTimer();
+                            var vid = vpGetVideo();
+                            if (vid) vid.playbackRate = _vp.speed;
+                            if (_vp.mode === 'frames' && _vp.playing) vpStartTimer();
+                        }
+
+                        function vpAttachSeekEvents() {
+                            var area = document.getElementById('vp-seek-area');
+                            if (!area || area._vpEventsAttached) return;
+                            area._vpEventsAttached = true;
+                            area.addEventListener('mouseenter', function() {
+                                document.getElementById('vp-progress-bg').style.height = '6px';
+                                document.getElementById('vp-thumb').style.opacity = '1';
+                            });
+                            area.addEventListener('mouseleave', function() {
+                                if (!_vp.seeking) {
+                                    document.getElementById('vp-progress-bg').style.height = '4px';
+                                    document.getElementById('vp-thumb').style.opacity = '0';
+                                    var tip = document.getElementById('vp-tooltip');
+                                    if (tip) tip.style.opacity = '0';
+                                }
+                            });
+                            area.addEventListener('mousedown', vpSeekStart);
+                            area.addEventListener('mousemove', vpSeekMove);
+                        }
+
+                        function vpInitVideo(url, detections) {
+                            _vp.mode = 'video';
+                            _vp.frames = []; _vp.playing = false; _vp.speed = 1;
+                            if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
+
+                            var vid = vpGetVideo();
+                            var slide = document.getElementById('video-slideshow');
+                            if (slide) slide.style.display = 'none';
+                            if (vid) {
+                                vid.src = url;
+                                vid.volume = _vp.volume / 100;
+                                vid.playbackRate = 1;
+                                vid.style.display = 'block';
+                                vid.load();
+
+                                vid.ontimeupdate = function () { vpUpdateUI(); };
+                                vid.onplay = function () { vpUpdatePlayBtn(); };
+                                vid.onpause = function () { vpUpdatePlayBtn(); };
+                                vid.onended = function () { vpUpdatePlayBtn(); };
+                                vid.onerror = function () {
+                                    // fallback to frames slideshow if video fails
+                                    if (_vp.frames && _vp.frames.length) {
+                                        vid.style.display = 'none';
+                                        vpInit(_vp.frames, _vp.fps);
+                                    } else {
+                                        var err = document.getElementById('vp-error');
+                                        if (err) err.style.display = 'block';
+                                    }
+                                };
+                            }
+
+                            document.getElementById('annotated-video-container').style.display = 'block';
+                            var btn = document.getElementById('vp-play-btn');
+                            if (btn) btn.innerHTML = '&#9654;';
+                            var spd = document.getElementById('vp-speed');
+                            if (spd) spd.value = '1';
+                            var vol = document.getElementById('vp-volume');
+                            if (vol) vol.value = _vp.volume;
+                            vpUpdateVolumeIcon();
+                            var err = document.getElementById('vp-error');
+                            if (err) err.style.display = 'none';
+                            vpAttachSeekEvents();
+                            vpUpdateUI();
                         }
 
                         function vpDownload() {
+                            var vid = vpGetVideo();
+                            if (_vp.mode === 'video' && vid && vid.src) {
+                                var a = document.createElement('a');
+                                a.href = vid.src;
+                                a.download = 'annotated_video.mp4';
+                                a.click();
+                                return;
+                            }
                             if (!_vp.frames.length) return;
                             var btn = document.getElementById('vp-download-btn');
                             if (btn) { btn.textContent = 'Encoding...'; btn.disabled = true; }
                             var fps = _vp.fps || 5;
                             var img = new Image();
-                            img.onload = function() {
+                            img.onload = function () {
                                 var canvas = document.createElement('canvas');
                                 canvas.width = img.naturalWidth;
                                 canvas.height = img.naturalHeight;
@@ -603,8 +790,8 @@
                                 var stream = canvas.captureStream(fps);
                                 var recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
                                 var chunks = [];
-                                recorder.ondataavailable = function(e) { if (e.data.size) chunks.push(e.data); };
-                                recorder.onstop = function() {
+                                recorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+                                recorder.onstop = function () {
                                     var blob = new Blob(chunks, { type: 'video/webm' });
                                     var a = document.createElement('a');
                                     a.href = URL.createObjectURL(blob);
@@ -619,7 +806,7 @@
                                 function drawNext() {
                                     if (idx >= _vp.frames.length) { recorder.stop(); return; }
                                     var fi = new Image();
-                                    fi.onload = function() {
+                                    fi.onload = function () {
                                         ctx.drawImage(fi, 0, 0);
                                         idx++;
                                         setTimeout(drawNext, interval);
@@ -654,13 +841,15 @@
                         function closeVideoResult() {
                             if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
                             _vp.playing = false; _vp.frames = [];
+                            var vid = vpGetVideo();
+                            if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
                             var slide = document.getElementById('video-slideshow');
                             if (slide) { slide.src = ''; slide.style.display = 'none'; }
                             document.getElementById('annotated-video-container').style.display = 'none';
                             document.getElementById('detection-results-video').style.display = 'none';
                         }
 
-                        function generateVideoReport() {}
+                        function generateVideoReport() { }
                         function toggleVideoPlay() { vpTogglePlay(); }
                         function seekVideo(e) { vpSeekToPos(e); }
                     </script>
@@ -691,30 +880,34 @@
                                     body: formData,
                                     headers: { "X-CSRFToken": getCsrfToken() }
                                 })
-                                .then(r => r.json())
-                                .then(data => {
-                                    aiLoader.style.display = "none";
-                                    if (data.status === "success" && data.frames && data.frames.length > 0) {
-                                        vpInit(data.frames, data.fps || 5);
-                                        if (data.detected_objects && data.detected_objects.length > 0) {
-                                            detectionsList.innerHTML = "";
-                                            data.detected_objects.forEach(obj => {
-                                                const li = document.createElement("li");
-                                                li.textContent = obj.label + ": " + obj.count;
-                                                li.style.color = "white";
-                                                detectionsList.appendChild(li);
-                                            });
-                                            document.getElementById("detection-results-video").style.display = "block";
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        aiLoader.style.display = "none";
+                                        if (data.status === "success" && data.video_url) {
+                                            if (data.frames) { _vp.frames = data.frames; _vp.fps = data.fps || 5; }
+                                            vpInitVideo(data.video_url);
+                                            if (data.detected_objects && data.detected_objects.length > 0) {
+                                                detectionsList.innerHTML = "";
+                                                data.detected_objects.forEach(obj => {
+                                                    const li = document.createElement("li");
+                                                    li.textContent = obj.label + ": " + obj.count;
+                                                    li.style.color = "white";
+                                                    detectionsList.appendChild(li);
+                                                });
+                                                document.getElementById("detection-results-video").style.display = "block";
+                                            }
+                                            setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+                                        } else if (data.status === "success" && data.frames && data.frames.length > 0) {
+                                            vpInit(data.frames, data.fps || 5);
+                                            setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+                                        } else {
+                                            alert("Error: " + (data.message || "Video processing failed."));
                                         }
-                                        setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
-                                    } else {
-                                        alert("Error: " + (data.message || "Video processing failed."));
-                                    }
-                                })
-                                .catch(err => {
-                                    aiLoader.style.display = "none";
-                                    alert("An error occurred while processing the video: " + err.message);
-                                });
+                                    })
+                                    .catch(err => {
+                                        aiLoader.style.display = "none";
+                                        alert("An error occurred while processing the video: " + err.message);
+                                    });
                             });
                         });
                     </script>
@@ -730,14 +923,18 @@
                         </div>
                         <div id="webcam-detection-results" style="display: none; text-align: center; margin-top: 10px;">
                             <h4 style="color: white;">Detected Objects:</h4>
-                            <ol id="webcam-detection-list" style="display: flex; justify-content: center; gap: 15px; padding: 0; list-style: none; color: white;"></ol>
+                            <ol id="webcam-detection-list"
+                                style="display: flex; justify-content: center; gap: 15px; padding: 0; list-style: none; color: white;">
+                            </ol>
                         </div>
                     </div>
 
                     <div id="webcam-buttons" style="text-align: center; width: 100%; margin-top: 10px; display: none;">
                         <button class="btn-default btn-large" onclick="takeScreenshot()">Take Screenshot</button>
-                        <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start Detection</button>
-                        <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop Webcam</button>
+                        <button class="btn-default btn-large" id="start-detection-btn" onclick="startDetection()">Start
+                            Detection</button>
+                        <button class="btn-default btn-large" onclick="stopWebcam()" id="stop-webcam-btn">Stop
+                            Webcam</button>
                     </div>
 
                     <img id="webcam-feed" src="" style="width: 100%; display: block;">
@@ -796,22 +993,22 @@
                                 return;
                             }
                             navigator.mediaDevices.getUserMedia({ video: true })
-                            .then(function(stream) {
-                                webcamStream = stream;
-                                var video = document.getElementById('webcam-video');
-                                video.srcObject = stream;
-                                video.style.display = 'block';
-                                // Keep overlay hidden until detection starts
-                                document.getElementById('detection-overlay').style.display = 'none';
-                                document.getElementById('webcam-buttons').style.display = 'inline-block';
-                                // Auto-scroll to webcam section
-                                setTimeout(function() {
-                                    document.getElementById('webcam-video').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                }, 300);
-                            })
-                            .catch(function(err) {
-                                alert('Cannot access webcam: ' + err.message);
-                            });
+                                .then(function (stream) {
+                                    webcamStream = stream;
+                                    var video = document.getElementById('webcam-video');
+                                    video.srcObject = stream;
+                                    video.style.display = 'block';
+                                    // Keep overlay hidden until detection starts
+                                    document.getElementById('detection-overlay').style.display = 'none';
+                                    document.getElementById('webcam-buttons').style.display = 'inline-block';
+                                    // Auto-scroll to webcam section
+                                    setTimeout(function () {
+                                        document.getElementById('webcam-video').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }, 300);
+                                })
+                                .catch(function (err) {
+                                    alert('Cannot access webcam: ' + err.message);
+                                });
                         }
 
                         function stopWebcam() {
@@ -819,7 +1016,7 @@
                             stopDetection();
                             // Stop camera stream
                             if (webcamStream) {
-                                webcamStream.getTracks().forEach(function(t) { t.stop(); });
+                                webcamStream.getTracks().forEach(function (t) { t.stop(); });
                                 webcamStream = null;
                             }
                             var video = document.getElementById('webcam-video');
@@ -889,7 +1086,7 @@
                             canvas.height = video.videoHeight || 480;
                             canvas.getContext('2d').drawImage(video, 0, 0);
 
-                            canvas.toBlob(function(blob) {
+                            canvas.toBlob(function (blob) {
                                 if (!detectionActive) return; // check again after async
                                 var formData = new FormData();
                                 formData.append('image', blob, 'frame.jpg');
@@ -898,40 +1095,40 @@
                                     headers: { 'X-CSRFToken': getCsrfToken() },
                                     body: formData
                                 })
-                                .then(function(r) { return r.json(); })
-                                .then(function(data) {
-                                    if (!detectionActive) return;
-                                    if (data.status === 'success') {
-                                        // Draw annotated frame on overlay
-                                        var overlay = document.getElementById('detection-overlay');
-                                        var img = new Image();
-                                        img.onload = function() {
-                                            if (detectionActive && overlay) {
-                                                overlay.getContext('2d').drawImage(img, 0, 0, overlay.width, overlay.height);
-                                            }
-                                        };
-                                        img.src = data.annotated_image_url;
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (data) {
+                                        if (!detectionActive) return;
+                                        if (data.status === 'success') {
+                                            // Draw annotated frame on overlay
+                                            var overlay = document.getElementById('detection-overlay');
+                                            var img = new Image();
+                                            img.onload = function () {
+                                                if (detectionActive && overlay) {
+                                                    overlay.getContext('2d').drawImage(img, 0, 0, overlay.width, overlay.height);
+                                                }
+                                            };
+                                            img.src = data.annotated_image_url;
 
-                                        // Show detected objects below webcam
-                                        var list = document.getElementById('webcam-detection-list');
-                                        list.innerHTML = '';
-                                        data.detected_objects.forEach(function(obj) {
-                                            var li = document.createElement('li');
-                                            li.textContent = obj.label + ': ' + obj.count;
-                                            list.appendChild(li);
-                                        });
-                                        document.getElementById('webcam-detection-results').style.display = 'block';
-                                    }
-                                    // Schedule next detection
-                                    if (detectionActive) {
-                                        detectionTimer = setTimeout(function() { runDetection(video); }, 2000);
-                                    }
-                                })
-                                .catch(function() {
-                                    if (detectionActive) {
-                                        detectionTimer = setTimeout(function() { runDetection(video); }, 2000);
-                                    }
-                                });
+                                            // Show detected objects below webcam
+                                            var list = document.getElementById('webcam-detection-list');
+                                            list.innerHTML = '';
+                                            data.detected_objects.forEach(function (obj) {
+                                                var li = document.createElement('li');
+                                                li.textContent = obj.label + ': ' + obj.count;
+                                                list.appendChild(li);
+                                            });
+                                            document.getElementById('webcam-detection-results').style.display = 'block';
+                                        }
+                                        // Schedule next detection
+                                        if (detectionActive) {
+                                            detectionTimer = setTimeout(function () { runDetection(video); }, 2000);
+                                        }
+                                    })
+                                    .catch(function () {
+                                        if (detectionActive) {
+                                            detectionTimer = setTimeout(function () { runDetection(video); }, 2000);
+                                        }
+                                    });
                             }, 'image/jpeg', 0.8);
                         }
 
@@ -945,7 +1142,7 @@
                             canvas.width = video.videoWidth || 640;
                             canvas.height = video.videoHeight || 480;
                             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                            canvas.toBlob(function(blob) {
+                            canvas.toBlob(function (blob) {
                                 var link = document.createElement('a');
                                 link.href = URL.createObjectURL(blob);
                                 link.download = 'screenshot.jpg';
@@ -1470,7 +1667,7 @@
                     .then(({ ok, status, text }) => {
                         document.getElementById('ai-loader').style.display = 'none';
                         let data;
-                        try { data = JSON.parse(text); } catch(e) {
+                        try { data = JSON.parse(text); } catch (e) {
                             console.error('Non-JSON response:', text);
                             alert('Server error ' + status + ':\n' + text.substring(0, 500));
                             return;
@@ -1572,7 +1769,7 @@
                 try {
                     doc.addImage(img.src, "JPEG", 50, yPosition, 100, 80);
                     yPosition += 90;
-                } catch(e) {
+                } catch (e) {
                     doc.text("[Image could not be embedded]", 50, yPosition);
                     yPosition += 10;
                 }
@@ -1652,31 +1849,35 @@
                 body: formData,
                 headers: { "X-CSRFToken": getCsrfToken() }
             })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("ai-loader-video").style.display = "none";
-                if (data.status === "success" && data.frames && data.frames.length > 0) {
-                    vpInit(data.frames, data.fps || 5);
-                    if (data.detected_objects && data.detected_objects.length > 0) {
-                        const list = document.getElementById("video-detection-list");
-                        list.innerHTML = "";
-                        data.detected_objects.forEach(obj => {
-                            const li = document.createElement("li");
-                            li.textContent = obj.label + ": " + obj.count;
-                            li.style.color = "white";
-                            list.appendChild(li);
-                        });
-                        document.getElementById("detection-results-video").style.display = "block";
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("ai-loader-video").style.display = "none";
+                    if (data.status === "success" && data.video_url) {
+                        if (data.frames) { _vp.frames = data.frames; _vp.fps = data.fps || 5; }
+                        vpInitVideo(data.video_url);
+                        if (data.detected_objects && data.detected_objects.length > 0) {
+                            const list = document.getElementById("video-detection-list");
+                            list.innerHTML = "";
+                            data.detected_objects.forEach(obj => {
+                                const li = document.createElement("li");
+                                li.textContent = obj.label + ": " + obj.count;
+                                li.style.color = "white";
+                                list.appendChild(li);
+                            });
+                            document.getElementById("detection-results-video").style.display = "block";
+                        }
+                        setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+                    } else if (data.status === "success" && data.frames && data.frames.length > 0) {
+                        vpInit(data.frames, data.fps || 5);
+                        setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+                    } else {
+                        alert("Error: " + (data.message || "Video processing failed."));
                     }
-                    setTimeout(() => document.getElementById("annotated-video-container").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
-                } else {
-                    alert("Error: " + (data.message || "Video processing failed."));
-                }
-            })
-            .catch(error => {
-                document.getElementById("ai-loader-video").style.display = "none";
-                alert("Failed to process video: " + error.message);
-            });
+                })
+                .catch(error => {
+                    document.getElementById("ai-loader-video").style.display = "none";
+                    alert("Failed to process video: " + error.message);
+                });
         });
     </script>
 
