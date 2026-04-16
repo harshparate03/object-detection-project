@@ -405,25 +405,45 @@
                                 <!-- Controls -->
                                 <div style="padding:12px 16px; background:#111827;">
                                     <!-- Progress bar -->
-                                    <div style="margin-bottom:10px; padding:4px 0; cursor:pointer;"
+                                    <div style="margin-bottom:10px; padding:6px 0; cursor:pointer;" id="vp-seek-area"
                                         onmousedown="vpSeekStart(event)" onmousemove="vpSeekMove(event)"
-                                        onmouseup="vpSeekEnd(event)" onmouseleave="vpSeekEnd(event)">
-                                        <div id="vp-progress-bg" style="background:#374151; border-radius:99px; height:5px; position:relative;">
+                                        onmouseup="vpSeekEnd(event)" onmouseleave="vpSeekEnd(event)"
+                                        onmouseenter="document.getElementById('vp-thumb').style.opacity='1'"
+                                        onmouseleave="vpSeekEnd(event); document.getElementById('vp-thumb').style.opacity='0'">
+                                        <div id="vp-progress-bg" style="background:#374151; border-radius:99px; height:5px; position:relative; transition:height 0.15s;"
+                                            onmouseenter="this.style.height='7px'" onmouseleave="this.style.height='5px'">
                                             <div id="vp-progress-fill" style="background:linear-gradient(90deg,#8b5cf6,#06b6d4); height:100%; border-radius:99px; width:0%; pointer-events:none;"></div>
-                                            <div id="vp-thumb" style="position:absolute; top:50%; left:0%; transform:translate(-50%,-50%); width:13px; height:13px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 4px rgba(0,0,0,0.6);"></div>
+                                            <div id="vp-thumb" style="position:absolute; top:50%; left:0%; transform:translate(-50%,-50%); width:13px; height:13px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 4px rgba(0,0,0,0.6); opacity:0; transition:opacity 0.15s;"></div>
                                         </div>
                                     </div>
                                     <!-- Buttons -->
                                     <div style="display:flex; align-items:center; gap:10px;">
+                                        <!-- Play/Pause -->
                                         <button id="vp-play-btn" onclick="vpTogglePlay()" title="Play / Pause"
                                             style="background:#8b5cf6; border:none; color:#fff; border-radius:50%; width:38px; height:38px; font-size:16px; cursor:pointer; flex-shrink:0;">&#9654;</button>
+                                        <!-- Time -->
                                         <span id="vp-time" style="color:#d1d5db; font-size:12px; font-family:monospace; white-space:nowrap; min-width:90px;">0:00 / 0:00</span>
                                         <div style="flex:1;"></div>
-                                        <span style="color:#9ca3af; font-size:14px;">&#128266;</span>
-                                        <input id="vp-volume" type="range" min="0" max="100" value="80"
-                                            oninput="vpSetVolume(this.value)"
-                                            style="width:70px; accent-color:#8b5cf6; cursor:pointer;">
-                                        <button id="vp-download-btn" onclick="vpDownload()" title="Download frames"
+                                        <!-- Volume -->
+                                        <div style="display:flex; align-items:center; gap:6px;">
+                                            <button id="vp-mute-btn" onclick="vpToggleMute()" title="Mute / Unmute"
+                                                style="background:none; border:none; color:#9ca3af; font-size:16px; cursor:pointer; padding:0; line-height:1;">&#128266;</button>
+                                            <input id="vp-volume" type="range" min="0" max="100" value="80"
+                                                oninput="vpSetVolume(this.value)"
+                                                style="width:70px; accent-color:#8b5cf6; cursor:pointer;">
+                                        </div>
+                                        <!-- Speed -->
+                                        <select id="vp-speed" onchange="vpSetSpeed(this.value)" title="Playback speed"
+                                            style="background:#1f2937; border:1px solid #374151; color:#d1d5db; border-radius:6px; padding:3px 6px; font-size:12px; cursor:pointer;">
+                                            <option value="0.25">0.25x</option>
+                                            <option value="0.5">0.5x</option>
+                                            <option value="1" selected>1x</option>
+                                            <option value="1.25">1.25x</option>
+                                            <option value="1.5">1.5x</option>
+                                            <option value="2">2x</option>
+                                        </select>
+                                        <!-- Download -->
+                                        <button id="vp-download-btn" onclick="vpDownload()" title="Download video"
                                             style="background:none; border:1px solid #374151; color:#9ca3af; border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;">&#11015; Download</button>
                                     </div>
                                 </div>
@@ -453,7 +473,7 @@
                             document.getElementById('generate-report-button').style.display = 'none';
                         }
 
-                        var _vp = { frames:[], fps:5, idx:0, playing:false, timer:null, seeking:false };
+                        var _vp = { frames:[], fps:5, idx:0, playing:false, timer:null, seeking:false, speed:1, volume:80, muted:false };
 
                         function vpFmtTime(sec) {
                             var m = Math.floor(sec/60), s = Math.floor(sec%60);
@@ -471,6 +491,23 @@
                             if (time)  time.textContent = vpFmtTime(_vp.idx/_vp.fps) + ' / ' + vpFmtTime((total-1)/_vp.fps);
                         }
 
+                        function vpStartTimer() {
+                            if (_vp.timer) clearInterval(_vp.timer);
+                            _vp.timer = setInterval(function() {
+                                _vp.idx++;
+                                if (_vp.idx >= _vp.frames.length) {
+                                    _vp.idx = _vp.frames.length - 1;
+                                    clearInterval(_vp.timer); _vp.timer = null;
+                                    _vp.playing = false;
+                                    var b = document.getElementById('vp-play-btn');
+                                    if (b) b.innerHTML = '&#9654;';
+                                }
+                                var slide = document.getElementById('video-slideshow');
+                                if (slide) slide.src = _vp.frames[_vp.idx];
+                                vpUpdateUI();
+                            }, 1000 / (_vp.fps * _vp.speed));
+                        }
+
                         function vpTogglePlay() {
                             if (!_vp.frames.length) return;
                             _vp.playing = !_vp.playing;
@@ -478,20 +515,7 @@
                             if (btn) btn.innerHTML = _vp.playing ? '&#9646;&#9646;' : '&#9654;';
                             if (_vp.playing) {
                                 if (_vp.idx >= _vp.frames.length - 1) _vp.idx = 0;
-                                if (_vp.timer) clearInterval(_vp.timer);
-                                _vp.timer = setInterval(function() {
-                                    _vp.idx++;
-                                    if (_vp.idx >= _vp.frames.length) {
-                                        _vp.idx = _vp.frames.length - 1;
-                                        clearInterval(_vp.timer); _vp.timer = null;
-                                        _vp.playing = false;
-                                        var b = document.getElementById('vp-play-btn');
-                                        if (b) b.innerHTML = '&#9654;';
-                                    }
-                                    var slide = document.getElementById('video-slideshow');
-                                    if (slide) slide.src = _vp.frames[_vp.idx];
-                                    vpUpdateUI();
-                                }, 1000 / _vp.fps);
+                                vpStartTimer();
                             } else {
                                 if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
                             }
@@ -511,35 +535,93 @@
                         function vpSeekStart(e) { _vp.seeking = true; vpSeekToPos(e); }
                         function vpSeekMove(e)  { if (_vp.seeking) vpSeekToPos(e); }
                         function vpSeekEnd(e)   { _vp.seeking = false; }
-                        function vpSetVolume(v) {}
+                        function vpSetVolume(v) {
+                            _vp.volume = parseInt(v);
+                            _vp.muted = _vp.volume === 0;
+                            vpUpdateVolumeIcon();
+                        }
+
+                        function vpToggleMute() {
+                            _vp.muted = !_vp.muted;
+                            var slider = document.getElementById('vp-volume');
+                            if (_vp.muted) {
+                                if (slider) slider.value = 0;
+                            } else {
+                                if (_vp.volume === 0) _vp.volume = 80;
+                                if (slider) slider.value = _vp.volume;
+                            }
+                            vpUpdateVolumeIcon();
+                        }
+
+                        function vpUpdateVolumeIcon() {
+                            var btn = document.getElementById('vp-mute-btn');
+                            if (!btn) return;
+                            var v = _vp.muted ? 0 : _vp.volume;
+                            btn.innerHTML = v === 0 ? '&#128263;' : v < 50 ? '&#128264;' : '&#128266;';
+                        }
+
+                        function vpSetSpeed(v) {
+                            _vp.speed = parseFloat(v);
+                            if (_vp.playing) vpStartTimer();
+                        }
 
                         function vpDownload() {
                             if (!_vp.frames.length) return;
                             var btn = document.getElementById('vp-download-btn');
-                            if (btn) { btn.textContent = 'Preparing...'; btn.disabled = true; }
-                            _vp.frames.forEach(function(dataUrl, i) {
-                                var a = document.createElement('a');
-                                a.href = dataUrl;
-                                a.download = 'frame_' + String(i+1).padStart(3,'0') + '.jpg';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                            });
-                            setTimeout(function() {
-                                if (btn) { btn.innerHTML = '&#11015; Download'; btn.disabled = false; }
-                            }, 1500);
+                            if (btn) { btn.textContent = 'Encoding...'; btn.disabled = true; }
+                            var fps = _vp.fps || 5;
+                            var img = new Image();
+                            img.onload = function() {
+                                var canvas = document.createElement('canvas');
+                                canvas.width = img.naturalWidth;
+                                canvas.height = img.naturalHeight;
+                                var ctx = canvas.getContext('2d');
+                                var stream = canvas.captureStream(fps);
+                                var recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                                var chunks = [];
+                                recorder.ondataavailable = function(e) { if (e.data.size) chunks.push(e.data); };
+                                recorder.onstop = function() {
+                                    var blob = new Blob(chunks, { type: 'video/webm' });
+                                    var a = document.createElement('a');
+                                    a.href = URL.createObjectURL(blob);
+                                    a.download = 'annotated_video.webm';
+                                    a.click();
+                                    URL.revokeObjectURL(a.href);
+                                    if (btn) { btn.innerHTML = '&#11015; Download'; btn.disabled = false; }
+                                };
+                                recorder.start();
+                                var idx = 0;
+                                var interval = 1000 / fps;
+                                function drawNext() {
+                                    if (idx >= _vp.frames.length) { recorder.stop(); return; }
+                                    var fi = new Image();
+                                    fi.onload = function() {
+                                        ctx.drawImage(fi, 0, 0);
+                                        idx++;
+                                        setTimeout(drawNext, interval);
+                                    };
+                                    fi.src = _vp.frames[idx];
+                                }
+                                drawNext();
+                            };
+                            img.src = _vp.frames[0];
                         }
 
                         function vpInit(frames, fps) {
                             if (!frames || !frames.length) return;
                             _vp.frames = frames; _vp.fps = fps || 5;
-                            _vp.idx = 0; _vp.playing = false;
+                            _vp.idx = 0; _vp.playing = false; _vp.speed = 1;
                             if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
                             document.getElementById('annotated-video-container').style.display = 'block';
                             var slide = document.getElementById('video-slideshow');
                             if (slide) { slide.style.display = 'block'; slide.src = frames[0]; }
                             var btn = document.getElementById('vp-play-btn');
                             if (btn) btn.innerHTML = '&#9654;';
+                            var spd = document.getElementById('vp-speed');
+                            if (spd) spd.value = '1';
+                            var vol = document.getElementById('vp-volume');
+                            if (vol) vol.value = _vp.volume;
+                            vpUpdateVolumeIcon();
                             var err = document.getElementById('vp-error');
                             if (err) err.style.display = 'none';
                             vpUpdateUI();
