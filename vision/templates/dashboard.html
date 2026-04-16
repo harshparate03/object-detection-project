@@ -493,7 +493,7 @@
                             const aiLoader = document.getElementById("ai-loader-video");
                             const processedVideoContainer = document.getElementById("annotated-video-container");
                             const detectionsList = document.getElementById("video-detection-list");
-                            const reportButton = document.getElementById("generate-report-video-button");
+                            
 
                             videoUploadInput.addEventListener("change", function () {
                                 const file = this.files[0];
@@ -508,7 +508,7 @@
                                 aiLoader.style.display = "flex";
                                 processedVideoContainer.style.display = "none";
                                 detectionsList.innerHTML = "";
-                                reportButton.style.display = "none";
+                                
 
                                 fetch("{% url 'upload_video' %}", {
                                     method: "POST",
@@ -552,7 +552,7 @@
                                                 detectionsList.appendChild(li);
                                             });
                                             document.getElementById("detection-results-video").style.display = "block";
-                                            reportButton.style.display = "inline-block";
+                                            
                                         }
 
                                         setTimeout(() => processedVideoContainer.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
