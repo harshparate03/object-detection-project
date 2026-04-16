@@ -541,7 +541,12 @@
                         function vpTogglePlay() {
                             var vid = vpGetVideo();
                             if (_vp.mode === 'video' && vid) {
-                                if (vid.paused) { vid.play(); } else { vid.pause(); }
+                                if (vid.paused) {
+                                    var p = vid.play();
+                                    if (p !== undefined) { p.catch(function() {}); }
+                                } else {
+                                    vid.pause();
+                                }
                             } else {
                                 if (!_vp.frames.length) return;
                                 _vp.playing = !_vp.playing;
@@ -738,12 +743,12 @@
                                 vid.style.display = 'block';
                                 vid.load();
 
-                                vid.ontimeupdate = function () { vpUpdateUI(); };
-                                vid.onplay = function () { vpUpdatePlayBtn(); };
-                                vid.onpause = function () { vpUpdatePlayBtn(); };
-                                vid.onended = function () { vpUpdatePlayBtn(); };
-                                vid.onerror = function () {
-                                    // fallback to frames slideshow if video fails
+                                vid.ontimeupdate = function() { vpUpdateUI(); };
+                                vid.oncanplay   = function() { vpUpdateUI(); };
+                                vid.onplay      = function() { vpUpdatePlayBtn(); };
+                                vid.onpause     = function() { vpUpdatePlayBtn(); };
+                                vid.onended     = function() { vpUpdatePlayBtn(); };
+                                vid.onerror     = function() {
                                     if (_vp.frames && _vp.frames.length) {
                                         vid.style.display = 'none';
                                         vpInit(_vp.frames, _vp.fps);
