@@ -445,7 +445,6 @@
 
                     </div>
                     <script>
-                        // Close functions for result panels
                         function closeImageResult() {
                             document.getElementById('annotated-image-container').style.display = 'none';
                             document.getElementById('annotated-image').src = '';
@@ -453,35 +452,31 @@
                             document.getElementById('detection-list').innerHTML = '';
                             document.getElementById('generate-report-button').style.display = 'none';
                         }
-                                                function generateVideoReport() {}
 
-                        // ── Video Player ──────────────────────────────────
-                        var _vp = {
-                            frames: [], fps: 5, idx: 0, playing: false,
-                            timer: null, seeking: false, volume: 0.8
-                        };
+                        var _vp = { frames:[], fps:5, idx:0, playing:false, timer:null, seeking:false };
 
                         function vpFmtTime(sec) {
-                            var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
-                            return m + ':' + (s < 10 ? '0' : '') + s;
+                            var m = Math.floor(sec/60), s = Math.floor(sec%60);
+                            return m + ':' + (s<10?'0':'') + s;
                         }
 
                         function vpUpdateUI() {
                             var total = _vp.frames.length;
-                            var pct = total > 1 ? (_vp.idx / (total - 1)) * 100 : 0;
-                            document.getElementById('vp-progress-fill').style.width = pct + '%';
-                            document.getElementById('vp-thumb').style.left = pct + '%';
-                            var cur = vpFmtTime(_vp.idx / _vp.fps);
-                            var dur = vpFmtTime((total - 1) / _vp.fps);
-                            document.getElementById('vp-time').textContent = cur + ' / ' + dur;
+                            var pct = total > 1 ? (_vp.idx / (total-1)) * 100 : 0;
+                            var fill = document.getElementById('vp-progress-fill');
+                            var thumb = document.getElementById('vp-thumb');
+                            var time  = document.getElementById('vp-time');
+                            if (fill)  fill.style.width = pct + '%';
+                            if (thumb) thumb.style.left = pct + '%';
+                            if (time)  time.textContent = vpFmtTime(_vp.idx/_vp.fps) + ' / ' + vpFmtTime((total-1)/_vp.fps);
                         }
 
                         function vpTogglePlay() {
                             if (!_vp.frames.length) return;
                             _vp.playing = !_vp.playing;
-                            document.getElementById('vp-play-btn').innerHTML = _vp.playing ? '&#9646;&#9646;' : '&#9654;';
+                            var btn = document.getElementById('vp-play-btn');
+                            if (btn) btn.innerHTML = _vp.playing ? '&#9646;&#9646;' : '&#9654;';
                             if (_vp.playing) {
-                                // restart from beginning if at end
                                 if (_vp.idx >= _vp.frames.length - 1) _vp.idx = 0;
                                 if (_vp.timer) clearInterval(_vp.timer);
                                 _vp.timer = setInterval(function() {
@@ -490,9 +485,11 @@
                                         _vp.idx = _vp.frames.length - 1;
                                         clearInterval(_vp.timer); _vp.timer = null;
                                         _vp.playing = false;
-                                        document.getElementById('vp-play-btn').innerHTML = '&#9654;';
+                                        var b = document.getElementById('vp-play-btn');
+                                        if (b) b.innerHTML = '&#9654;';
                                     }
-                                    document.getElementById('video-slideshow').src = _vp.frames[_vp.idx];
+                                    var slide = document.getElementById('video-slideshow');
+                                    if (slide) slide.src = _vp.frames[_vp.idx];
                                     vpUpdateUI();
                                 }, 1000 / _vp.fps);
                             } else {
@@ -503,48 +500,48 @@
                         function vpSeekToPos(e) {
                             if (!_vp.frames.length) return;
                             var bar = document.getElementById('vp-progress-bg');
+                            if (!bar) return;
                             var rect = bar.getBoundingClientRect();
                             var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                             _vp.idx = Math.round(pct * (_vp.frames.length - 1));
-                            document.getElementById('video-slideshow').src = _vp.frames[_vp.idx];
+                            var slide = document.getElementById('video-slideshow');
+                            if (slide) slide.src = _vp.frames[_vp.idx];
                             vpUpdateUI();
                         }
                         function vpSeekStart(e) { _vp.seeking = true; vpSeekToPos(e); }
                         function vpSeekMove(e)  { if (_vp.seeking) vpSeekToPos(e); }
                         function vpSeekEnd(e)   { _vp.seeking = false; }
-
-                        function vpSetVolume(v) { _vp.volume = v / 100; }
+                        function vpSetVolume(v) {}
 
                         function vpDownload() {
                             if (!_vp.frames.length) return;
                             var btn = document.getElementById('vp-download-btn');
-                            btn.textContent = 'Preparing...';
-                            btn.disabled = true;
-                            var count = 0;
+                            if (btn) { btn.textContent = 'Preparing...'; btn.disabled = true; }
                             _vp.frames.forEach(function(dataUrl, i) {
                                 var a = document.createElement('a');
                                 a.href = dataUrl;
-                                a.download = 'frame_' + String(i + 1).padStart(3, '0') + '.jpg';
+                                a.download = 'frame_' + String(i+1).padStart(3,'0') + '.jpg';
                                 document.body.appendChild(a);
                                 a.click();
                                 document.body.removeChild(a);
-                                count++;
                             });
                             setTimeout(function() {
-                                btn.innerHTML = '&#11015; Download';
-                                btn.disabled = false;
+                                if (btn) { btn.innerHTML = '&#11015; Download'; btn.disabled = false; }
                             }, 1500);
                         }
 
                         function vpInit(frames, fps) {
+                            if (!frames || !frames.length) return;
                             _vp.frames = frames; _vp.fps = fps || 5;
                             _vp.idx = 0; _vp.playing = false;
                             if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
+                            document.getElementById('annotated-video-container').style.display = 'block';
                             var slide = document.getElementById('video-slideshow');
-                            slide.style.display = 'block';
-                            slide.src = frames[0];
-                            document.getElementById('vp-play-btn').innerHTML = '&#9654;';
-                            document.getElementById('vp-error').style.display = 'none';
+                            if (slide) { slide.style.display = 'block'; slide.src = frames[0]; }
+                            var btn = document.getElementById('vp-play-btn');
+                            if (btn) btn.innerHTML = '&#9654;';
+                            var err = document.getElementById('vp-error');
+                            if (err) err.style.display = 'none';
                             vpUpdateUI();
                         }
 
@@ -557,166 +554,7 @@
                             document.getElementById('detection-results-video').style.display = 'none';
                         }
 
-                        // legacy stubs (unused but referenced in old code)
-                        function toggleVideoPlay() { vpTogglePlay(); }
-                        function seekVideo(e) { vpSeekToPos(e); }
-                        function closeVideoResult() {
-                            if (window._videoInterval) { clearInterval(window._videoInterval); window._videoInterval = null; }
-                            window._slideshowPlaying = false;
-                            var slide = document.getElementById('video-slideshow');
-                            if (slide) { slide.src = ''; slide.style.display = 'none'; }
-                            var v = document.getElementById('annotated-video');
-                            v.pause();
-                            document.getElementById('video-source').src = '';
-                            v.load();
-                            document.getElementById('annotated-video-container').style.display = 'none';
-                            document.getElementById('detection-results-video').style.display = 'none';
-                            var ctrl = document.getElementById('video-player-controls');
-                            if (ctrl) ctrl.style.display = 'none';
-                        }
-
-                        function toggleVideoPlay() {
-                            if (!window._slideshowFrames || !window._slideshowFrames.length) return;
-                            window._slideshowPlaying = !window._slideshowPlaying;
-                            var btn = document.getElementById('video-play-btn');
-                            if (window._slideshowPlaying) {
-                                btn.innerHTML = "&#9646;&#9646;";
-                                if (window._videoInterval) clearInterval(window._videoInterval);
-                                window._videoInterval = setInterval(function() {
-                                    window._slideshowFrameIdx = (window._slideshowFrameIdx + 1) % window._slideshowFrames.length;
-                                    document.getElementById('video-slideshow').src = window._slideshowFrames[window._slideshowFrameIdx];
-                                    var pct = (window._slideshowFrameIdx / (window._slideshowFrames.length - 1)) * 100;
-                                    document.getElementById('video-progress-fill').style.width = pct + '%';
-                                    document.getElementById('video-time-label').textContent = (window._slideshowFrameIdx + 1) + ' / ' + window._slideshowFrames.length + ' frames';
-                                    if (window._slideshowFrameIdx === window._slideshowFrames.length - 1) {
-                                        clearInterval(window._videoInterval); window._videoInterval = null;
-                                        window._slideshowPlaying = false;
-                                        btn.innerHTML = "&#9654;";
-                                    }
-                                }, 1000 / (window._slideshowFps || 5));
-                            } else {
-                                btn.innerHTML = "&#9654;";
-                                if (window._videoInterval) { clearInterval(window._videoInterval); window._videoInterval = null; }
-                            }
-                        }
-
-                        function seekVideo(e) {
-                            if (!window._slideshowFrames || !window._slideshowFrames.length) return;
-                            var bar = document.getElementById('video-progress-bg');
-                            var rect = bar.getBoundingClientRect();
-                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            var idx = Math.round(pct * (window._slideshowFrames.length - 1));
-                            window._slideshowFrameIdx = idx;
-                            document.getElementById('video-slideshow').src = window._slideshowFrames[idx];
-                            document.getElementById('video-progress-fill').style.width = (pct * 100) + '%';
-                            document.getElementById('video-time-label').textContent = (idx + 1) + ' / ' + window._slideshowFrames.length + ' frames';
-                        }
-
-                                                function generateVideoReport() {}
-
-                        // ── Video Player ──────────────────────────────────
-                        var _vp = {
-                            frames: [], fps: 5, idx: 0, playing: false,
-                            timer: null, seeking: false, volume: 0.8
-                        };
-
-                        function vpFmtTime(sec) {
-                            var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
-                            return m + ':' + (s < 10 ? '0' : '') + s;
-                        }
-
-                        function vpUpdateUI() {
-                            var total = _vp.frames.length;
-                            var pct = total > 1 ? (_vp.idx / (total - 1)) * 100 : 0;
-                            document.getElementById('vp-progress-fill').style.width = pct + '%';
-                            document.getElementById('vp-thumb').style.left = pct + '%';
-                            var cur = vpFmtTime(_vp.idx / _vp.fps);
-                            var dur = vpFmtTime((total - 1) / _vp.fps);
-                            document.getElementById('vp-time').textContent = cur + ' / ' + dur;
-                        }
-
-                        function vpTogglePlay() {
-                            if (!_vp.frames.length) return;
-                            _vp.playing = !_vp.playing;
-                            document.getElementById('vp-play-btn').innerHTML = _vp.playing ? '&#9646;&#9646;' : '&#9654;';
-                            if (_vp.playing) {
-                                // restart from beginning if at end
-                                if (_vp.idx >= _vp.frames.length - 1) _vp.idx = 0;
-                                if (_vp.timer) clearInterval(_vp.timer);
-                                _vp.timer = setInterval(function() {
-                                    _vp.idx++;
-                                    if (_vp.idx >= _vp.frames.length) {
-                                        _vp.idx = _vp.frames.length - 1;
-                                        clearInterval(_vp.timer); _vp.timer = null;
-                                        _vp.playing = false;
-                                        document.getElementById('vp-play-btn').innerHTML = '&#9654;';
-                                    }
-                                    document.getElementById('video-slideshow').src = _vp.frames[_vp.idx];
-                                    vpUpdateUI();
-                                }, 1000 / _vp.fps);
-                            } else {
-                                if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
-                            }
-                        }
-
-                        function vpSeekToPos(e) {
-                            if (!_vp.frames.length) return;
-                            var bar = document.getElementById('vp-progress-bg');
-                            var rect = bar.getBoundingClientRect();
-                            var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            _vp.idx = Math.round(pct * (_vp.frames.length - 1));
-                            document.getElementById('video-slideshow').src = _vp.frames[_vp.idx];
-                            vpUpdateUI();
-                        }
-                        function vpSeekStart(e) { _vp.seeking = true; vpSeekToPos(e); }
-                        function vpSeekMove(e)  { if (_vp.seeking) vpSeekToPos(e); }
-                        function vpSeekEnd(e)   { _vp.seeking = false; }
-
-                        function vpSetVolume(v) { _vp.volume = v / 100; }
-
-                        function vpDownload() {
-                            if (!_vp.frames.length) return;
-                            var btn = document.getElementById('vp-download-btn');
-                            btn.textContent = 'Preparing...';
-                            btn.disabled = true;
-                            var count = 0;
-                            _vp.frames.forEach(function(dataUrl, i) {
-                                var a = document.createElement('a');
-                                a.href = dataUrl;
-                                a.download = 'frame_' + String(i + 1).padStart(3, '0') + '.jpg';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                                count++;
-                            });
-                            setTimeout(function() {
-                                btn.innerHTML = '&#11015; Download';
-                                btn.disabled = false;
-                            }, 1500);
-                        }
-
-                        function vpInit(frames, fps) {
-                            _vp.frames = frames; _vp.fps = fps || 5;
-                            _vp.idx = 0; _vp.playing = false;
-                            if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
-                            var slide = document.getElementById('video-slideshow');
-                            slide.style.display = 'block';
-                            slide.src = frames[0];
-                            document.getElementById('vp-play-btn').innerHTML = '&#9654;';
-                            document.getElementById('vp-error').style.display = 'none';
-                            vpUpdateUI();
-                        }
-
-                        function closeVideoResult() {
-                            if (_vp.timer) { clearInterval(_vp.timer); _vp.timer = null; }
-                            _vp.playing = false; _vp.frames = [];
-                            var slide = document.getElementById('video-slideshow');
-                            if (slide) { slide.src = ''; slide.style.display = 'none'; }
-                            document.getElementById('annotated-video-container').style.display = 'none';
-                            document.getElementById('detection-results-video').style.display = 'none';
-                        }
-
-                        // legacy stubs (unused but referenced in old code)
+                        function generateVideoReport() {}
                         function toggleVideoPlay() { vpTogglePlay(); }
                         function seekVideo(e) { vpSeekToPos(e); }
                     </script>
